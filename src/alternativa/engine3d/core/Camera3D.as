@@ -9,6 +9,8 @@
 package alternativa.engine3d.core {
 
 	import alternativa.engine3d.alternativa3d;
+	import alternativa.engine3d.materials.DecodeDepthMaterial;
+	import alternativa.engine3d.materials.EncodeDepthMaterial;
 
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -17,6 +19,7 @@ package alternativa.engine3d.core {
 	import flash.display.Stage3D;
 	import flash.display.StageAlign;
 	import flash.display3D.Context3D;
+	import flash.display3D.Context3DTextureFormat;
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -165,6 +168,18 @@ public class Camera3D extends Object3D {
 	/**
 	 * @private
 	 */
+	alternativa3d var depthRenderer:Renderer = new Renderer();
+
+	private var encDepthMaterial:EncodeDepthMaterial = new EncodeDepthMaterial();
+	private var decDepthMaterial:DecodeDepthMaterial = new DecodeDepthMaterial();
+	private var depthTextureLog2Width:int = -1;
+	private var depthTextureLog2Height:int = -1;
+
+	public var depthRenderMode:int = 0;
+
+	/**
+	 * @private
+	 */
 	alternativa3d var numDraws:int;
 
 	/**
@@ -217,10 +232,31 @@ public class Camera3D extends Object3D {
 		context3D = stage3D.context3D;
 		if (context3D != null && view != null && renderer != null && (view.stage != null || view._canvas != null)) {
 			renderer.camera = this;
+			depthRenderer.camera = this;
 			// Projection argument calculating
 			calculateProjection(view._width, view._height);
 			// Preparing to rendering
 			view.prepareToRender(stage3D, context3D);
+			if (depthRenderMode > 0) {
+				// update depth texture
+				var log2Width:int = Math.ceil(Math.log(view._width)/Math.LN2);
+				var log2Height:int = Math.ceil(Math.log(view._height)/Math.LN2);
+				log2Width = log2Width > 11 ? 11 : log2Width;
+				log2Height = log2Height > 11 ? 11 : log2Height;
+				if (depthTextureLog2Width != log2Width || depthTextureLog2Height != log2Height || decDepthMaterial.depthTexture == null) {
+					if (decDepthMaterial.depthTexture != null) decDepthMaterial.depthTexture.dispose();
+					decDepthMaterial.depthTexture = context3D.createTexture(1 << log2Width, 1 << log2Height, Context3DTextureFormat.BGRA, true);
+					depthTextureLog2Width = log2Width;
+					depthTextureLog2Height = log2Height;
+				}
+				encDepthMaterial.outputScaleX = view._width/(1 << depthTextureLog2Width);
+				encDepthMaterial.outputScaleY = view._height/(1 << depthTextureLog2Height);
+				encDepthMaterial.outputOffsetX = encDepthMaterial.outputScaleX - 1;
+				encDepthMaterial.outputOffsetY = 1 - encDepthMaterial.outputScaleY;
+				decDepthMaterial.scaleX = encDepthMaterial.outputScaleX;
+				decDepthMaterial.scaleY = encDepthMaterial.outputScaleY;
+			}
+
 			// Transformations calculating
 			if (transformChanged) composeTransforms();
 			localToGlobalTransform.copy(transform);
@@ -381,16 +417,40 @@ public class Camera3D extends Object3D {
 					} else {
 						root.collectDraws(this, null, 0, root.useShadow);
 					}
+					if (depthRenderMode > 0) {
+						root.collectDepthDraws(this, depthRenderer, encDepthMaterial);
+					}
+
 					// Debug the boundbox
 					if (debug && root.boundBox != null && (checkInDebug(root) & Debug.BOUNDS)) Debug.drawBoundBox(this, root.boundBox, root.localToCameraTransform);
 				}
 				// Gather the draws for children
 				root.collectChildrenDraws(this, lights, lightsLength, root.useShadow);
+				if (depthRenderMode > 0) {
+					root.collectChildrenDepthDraws(this, depthRenderer, encDepthMaterial);
+				}
 
-				// Mouse events prosessing
+				// Mouse events processing
 				view.processMouseEvents(context3D, this);
 				// Render
 				renderer.render(context3D);
+
+				if (depthRenderMode > 0) {
+					context3D.setRenderToTexture(decDepthMaterial.depthTexture, true, 0, 0);
+					rect.width = view._width;
+					rect.height = view._height;
+					context3D.setScissorRectangle(rect);
+//					context3D.clear(1, 0);
+					context3D.clear(0, 0);
+					depthRenderer.render(context3D);
+					context3D.setRenderToBackBuffer();
+					context3D.setScissorRectangle(null);
+
+					// render quad to screen
+					decDepthMaterial.encodeEnabled = depthRenderMode != 1;
+					decDepthMaterial.collectQuadDraw(this);
+					renderer.render(context3D);
+				}
 			}
 			// Output
 			if (view._canvas == null) {
@@ -808,7 +868,7 @@ public class Camera3D extends Object3D {
 	private var trianglesTextField:TextField;
 	private var timerTextField:TextField;
 	private var graph:Bitmap;
-	private var rect:Rectangle;
+	private var rect:Rectangle = new Rectangle();
 
 	private var _diagramAlign:String = "TR";
 	private var _diagramHorizontalMargin:Number = 2;
@@ -1124,6 +1184,9 @@ public class Camera3D extends Object3D {
 		value = 1000 / (time - previousFrameTime);
 		if (value > stageFrameRate) value = stageFrameRate;
 		graph.bitmapData.scroll(1, 0);
+		// TODO: rollback this
+		rect.width = 1;
+		rect.height = 40;
 		graph.bitmapData.fillRect(rect, 0x20FFFFFF);
 		graph.bitmapData.setPixel32(0, 40 * (1 - value / stageFrameRate), 0xFFCCCCCC);
 		previousFrameTime = time;

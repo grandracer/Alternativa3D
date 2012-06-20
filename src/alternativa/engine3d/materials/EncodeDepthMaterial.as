@@ -19,21 +19,23 @@ package alternativa.engine3d.materials {
 	import flash.utils.Dictionary;
 
 	use namespace alternativa3d;
-	public class DepthMaterial extends Material {
+	public class EncodeDepthMaterial extends Material {
 
 		private static var caches:Dictionary = new Dictionary(true);
 		private var cachedContext3D:Context3D;
 		private var programsCache:Dictionary;
 
-		private static var outDepthProcedure:Procedure = new Procedure(["#c0=cColor", "mov o0, c0"], "outColorProcedure");
+		public var outputScaleX:Number = 1;
+		public var outputScaleY:Number = 1;
+		public var outputOffsetX:Number = 0;
+		public var outputOffsetY:Number = 0;
 
-		public function DepthMaterial() {
+		public function EncodeDepthMaterial() {
 		}
 
 		private function setupProgram(object:Object3D):DepthMaterialProgram {
 			// project vector in camera
-			// transfer v.z * 255
-
+			// transfer v0.z = z * 255 / farClipping
 
 			var vertexLinker:Linker = new Linker(Context3DProgramType.VERTEX);
 			var positionVar:String = "aPosition";
@@ -47,13 +49,17 @@ package alternativa.engine3d.materials {
 			vertexLinker.setInputParams(_projectProcedure, positionVar);
 			vertexLinker.setOutputParams(_projectProcedure, "tProjected");
 
-			var transferZ:Procedure = new Procedure([
+			var vertexProcedure:Procedure = new Procedure([
 				"#v0=vDistance",
 				"#c0=cScale",
+				"#c1=cOutput",
 				"mul v0, i0.z, c0.x",
+				"mul i0.xy, i0.xy, c1.xy",
+				"mul t0.xy, c1.zwzw, i0.w",
+				"add i0.xy, i0.xy, t0.xy",
 				"mov o0, i0"
 			], "DepthVertex");
-			vertexLinker.addProcedure(transferZ, "tProjected");
+			vertexLinker.addProcedure(vertexProcedure, "tProjected");
 
 			var fragmentLinker:Linker = new Linker(Context3DProgramType.FRAGMENT);
 			fragmentLinker.addProcedure(new Procedure([
@@ -64,7 +70,7 @@ package alternativa.engine3d.materials {
 				"mul t0.x, t0.x, c0.x",
 				"mov t0.zw, c0.zwzw",
 				"mov o0, t0"
-			]), "DepthFragment");
+			], "DepthFragment"));
 
 			fragmentLinker.varyings = vertexLinker.varyings;
 			return new DepthMaterialProgram(vertexLinker, fragmentLinker);
@@ -97,21 +103,28 @@ package alternativa.engine3d.materials {
 				programsCache[object.transformProcedure] = program;
 			}
 			// Drawcall
-			var drawUnit:DrawUnit = camera.renderer.createDrawUnit(object, program.program, geometry._indexBuffer, surface.indexBegin, surface.numTriangles, program);
+			var drawUnit:DrawUnit = camera.depthRenderer.createDrawUnit(object, program.program, geometry._indexBuffer, surface.indexBegin, surface.numTriangles, program);
 			// Streams
 			drawUnit.setVertexBufferAt(program.aPosition, positionBuffer, geometry._attributesOffsets[VertexAttributes.POSITION], VertexAttributes.FORMATS[VertexAttributes.POSITION]);
 			// Constants
 			object.setTransformConstants(drawUnit, surface, program.vertexShader, camera);
 			drawUnit.setProjectionConstants(camera, program.cProjMatrix, object.localToCameraTransform);
+			drawUnit.setVertexConstantsFromNumbers(program.cScale, 255/camera.farClipping, 0, 0);
+			drawUnit.setVertexConstantsFromNumbers(program.cOutput, outputScaleX, outputScaleY, outputOffsetX, outputOffsetY);
+			drawUnit.setFragmentConstantsFromNumbers(program.cConstants, 1/255, 0, 0);
 			// Send to render
-			camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
+			camera.depthRenderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
 		}
 
 		/**
 		 * @inheritDoc
 		 */
 		override public function clone():Material {
-			var res:DepthMaterial = new DepthMaterial();
+			var res:EncodeDepthMaterial = new EncodeDepthMaterial();
+			res.outputScaleX = outputScaleX;
+			res.outputScaleY = outputScaleY;
+			res.outputOffsetX = outputOffsetX;
+			res.outputOffsetY = outputOffsetY;
 			res.clonePropertiesFrom(this);
 			return res;
 		}
@@ -128,6 +141,9 @@ class DepthMaterialProgram extends ShaderProgram {
 
 	public var aPosition:int = -1;
 	public var cProjMatrix:int = -1;
+	public var cConstants:int = -1;
+	public var cScale:int = -1;
+	public var cOutput:int = -1;
 
 	public function DepthMaterialProgram(vertex:Linker, fragment:Linker) {
 		super(vertex, fragment);
@@ -138,6 +154,9 @@ class DepthMaterialProgram extends ShaderProgram {
 
 		aPosition =  vertexShader.findVariable("aPosition");
 		cProjMatrix = vertexShader.findVariable("cProjMatrix");
+		cScale = vertexShader.findVariable("cScale");
+		cOutput = vertexShader.findVariable("cOutput");
+		cConstants = fragmentShader.findVariable("cConstants");
 	}
 
 }
