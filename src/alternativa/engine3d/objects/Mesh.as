@@ -49,6 +49,7 @@ package alternativa.engine3d.objects {
 		 * @inheritDoc
 		 */
 		override public function intersectRay(origin:Vector3D, direction:Vector3D):RayIntersectionData {
+            if (!includeInRayIntersect) return null;
 			var childrenData:RayIntersectionData = super.intersectRay(origin, direction);
 			var contentData:RayIntersectionData;
 			if (geometry != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {

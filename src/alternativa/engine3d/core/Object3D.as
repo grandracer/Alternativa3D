@@ -281,6 +281,11 @@ package alternativa.engine3d.core {
 		 */
 		public var boundBox:BoundBox;
 
+        /**
+         * Determines whether object is opaque for ray intersection
+         */
+        public var includeInRayIntersect:Boolean = true;
+
 		/**
 		 * @private
 		 */
@@ -638,7 +643,7 @@ package alternativa.engine3d.core {
 		 * @see alternativa.engine3d.core.Camera3D#calculateRay()
 		 */
 		public function intersectRay(origin:Vector3D, direction:Vector3D):RayIntersectionData {
-			return intersectRayChildren(origin, direction);
+			return includeInRayIntersect ? intersectRayChildren(origin, direction) : null;
 		}
 
 		/**
@@ -647,8 +652,8 @@ package alternativa.engine3d.core {
 		alternativa3d function intersectRayChildren(origin:Vector3D, direction:Vector3D):RayIntersectionData {
 			var minTime:Number = 1e22;
 			var minData:RayIntersectionData = null;
-			var childOrigin:Vector3D;
-			var childDirection:Vector3D;
+			var childOrigin:Vector3D = null;
+			var childDirection:Vector3D = null;
 			for (var child:Object3D = childrenList; child != null; child = child.next) {
 				if (child.transformChanged) child.composeTransforms();
 				if (childOrigin == null) {
