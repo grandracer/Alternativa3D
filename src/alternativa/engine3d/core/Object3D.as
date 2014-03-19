@@ -644,9 +644,9 @@ package alternativa.engine3d.core {
 		 */
 		public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
             if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
+            if (rayIntersectionContext.invisibleObjectsAreTransparentForRays && !visible) return null;
             if (rayIntersectionContext.childrenCallStack != null) {
                 if (rayIntersectionContext.childrenCallStack[0] == this) {
-                    rayIntersectionContext.checkedTrianglesNum = 0; // unwinding stack
                     rayIntersectionContext.childrenCallStack.shift();
                 } else {
                     rayIntersectionContext.reset();

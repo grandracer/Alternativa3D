@@ -16,15 +16,16 @@ package alternativa.engine3d.core
 
         alternativa3d var stopIndex:uint;
 
-        alternativa3d var checkedTrianglesNum:uint;
+        public var trianglesToCheck:uint;
 
-        public var maxTrianglesToCheck:uint;
+        public var invisibleObjectsAreTransparentForRays:Boolean;
 
         public var rayIntersectionData:RayIntersectionData;
 
         public function RayIntersectionContext(maxTrianglesToCheck:uint = uint.MAX_VALUE)
         {
-            this.maxTrianglesToCheck = maxTrianglesToCheck;
+            this.trianglesToCheck = maxTrianglesToCheck;
+            this.invisibleObjectsAreTransparentForRays = false;
             reset();
         }
 
@@ -38,7 +39,6 @@ package alternativa.engine3d.core
             this.childrenCallStack = null;
             this.surface = null;
             this.stopIndex = 0;
-            this.checkedTrianglesNum = 0;
             this.rayIntersectionData = null;
         }
     }

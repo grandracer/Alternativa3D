@@ -52,27 +52,27 @@ package alternativa.engine3d.objects {
 		override public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
             if (!includeInRayIntersect) return null;
             if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
-			var childrenData:RayIntersectionData = super.intersectRay(origin, direction, rayIntersectionContext);
+            if (rayIntersectionContext.invisibleObjectsAreTransparentForRays && !visible) return null;
+            var childrenData:RayIntersectionData = super.intersectRay(origin, direction, rayIntersectionContext);
 			var contentData:RayIntersectionData;
 			if (rayIntersectionContext.childrenCallStack == null && geometry != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
 				var minTime:Number = Number.MAX_VALUE;
 				for each (var surface:Surface in _surfaces) {
                     if (rayIntersectionContext.surface == null || rayIntersectionContext.surface == surface) {
-                        rayIntersectionContext.surface = null;
                         var indexBegin:uint = Math.max(rayIntersectionContext.stopIndex, surface.indexBegin);
                         var numTrianglesAvailable:uint = surface.numTriangles - (indexBegin - surface.indexBegin) / 3;
-                        var maxTrianglesCanProcess:uint = rayIntersectionContext.maxTrianglesToCheck == uint.MAX_VALUE ? uint.MAX_VALUE :
-                                                          rayIntersectionContext.maxTrianglesToCheck - rayIntersectionContext.checkedTrianglesNum;
-                        var numTrianglesToProcess:uint = Math.min(numTrianglesAvailable, maxTrianglesCanProcess);
+                        var numTrianglesToProcess:uint = Math.min(numTrianglesAvailable, rayIntersectionContext.trianglesToCheck);
                         var data:RayIntersectionData = geometry.intersectRay(origin, direction, indexBegin, numTrianglesToProcess);
-                        rayIntersectionContext.checkedTrianglesNum += numTrianglesToProcess;
                         if (data != null && data.time < minTime) {
                             contentData = data;
                             contentData.object = this;
                             contentData.surface = surface;
                             minTime = data.time;
                         }
-                        if (numTrianglesAvailable > maxTrianglesCanProcess) {
+                        rayIntersectionContext.surface = null;
+                        rayIntersectionContext.stopIndex = 0;
+                        rayIntersectionContext.trianglesToCheck -= numTrianglesToProcess;
+                        if (numTrianglesAvailable > numTrianglesToProcess) {
                             rayIntersectionContext.surface = surface;
                             rayIntersectionContext.stopIndex = indexBegin + numTrianglesToProcess * 3;
                             rayIntersectionContext.childrenCallStack = new <Object3D>[this];

@@ -273,6 +273,7 @@ package alternativa.engine3d.objects {
 		override public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
             if (!includeInRayIntersect) return null;
             if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
+            if (rayIntersectionContext.invisibleObjectsAreTransparentForRays && !visible) return null;
             var childrenData:RayIntersectionData = super.intersectRay(origin, direction, rayIntersectionContext);
 			var contentData:RayIntersectionData;
 			var level:Object3D = levelList;
