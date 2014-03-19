@@ -14,7 +14,8 @@ package alternativa.engine3d.objects {
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.RayIntersectionData;
+    import alternativa.engine3d.core.RayIntersectionContext;
+    import alternativa.engine3d.core.RayIntersectionData;
 	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.materials.Material;
 	import alternativa.engine3d.resources.Geometry;
@@ -48,31 +49,41 @@ package alternativa.engine3d.objects {
 		/**
 		 * @inheritDoc
 		 */
-		override public function intersectRay(origin:Vector3D, direction:Vector3D):RayIntersectionData {
+		override public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
             if (!includeInRayIntersect) return null;
-			var childrenData:RayIntersectionData = super.intersectRay(origin, direction);
+            if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
+			var childrenData:RayIntersectionData = super.intersectRay(origin, direction, rayIntersectionContext);
 			var contentData:RayIntersectionData;
-			if (geometry != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
-				var minTime:Number = 1e22;
+			if (rayIntersectionContext.childrenCallStack == null && geometry != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
+				var minTime:Number = Number.MAX_VALUE;
 				for each (var surface:Surface in _surfaces) {
-					var data:RayIntersectionData = geometry.intersectRay(origin, direction, surface.indexBegin, surface.numTriangles);
-					if (data != null && data.time < minTime) {
-						contentData = data;
-						contentData.object = this;
-						contentData.surface = surface;
-						minTime = data.time;
-					}
+                    if (rayIntersectionContext.surface == null || rayIntersectionContext.surface == surface) {
+                        rayIntersectionContext.surface = null;
+                        var indexBegin:uint = Math.max(rayIntersectionContext.stopIndex, surface.indexBegin);
+                        var numTrianglesAvailable:uint = surface.numTriangles - (indexBegin - surface.indexBegin) / 3;
+                        var maxTrianglesCanProcess:uint = rayIntersectionContext.maxTrianglesToCheck == uint.MAX_VALUE ? uint.MAX_VALUE :
+                                                          rayIntersectionContext.maxTrianglesToCheck - rayIntersectionContext.checkedTrianglesNum;
+                        var numTrianglesToProcess:uint = Math.min(numTrianglesAvailable, maxTrianglesCanProcess);
+                        var data:RayIntersectionData = geometry.intersectRay(origin, direction, indexBegin, numTrianglesToProcess);
+                        rayIntersectionContext.checkedTrianglesNum += numTrianglesToProcess;
+                        if (data != null && data.time < minTime) {
+                            contentData = data;
+                            contentData.object = this;
+                            contentData.surface = surface;
+                            minTime = data.time;
+                        }
+                        if (numTrianglesAvailable > maxTrianglesCanProcess) {
+                            rayIntersectionContext.surface = surface;
+                            rayIntersectionContext.stopIndex = indexBegin + numTrianglesToProcess * 3;
+                            rayIntersectionContext.childrenCallStack = new <Object3D>[this];
+                            break;
+                        }
+                    }
 				}
 			}
-			if (childrenData != null) {
-				if (contentData != null) {
-					return childrenData.time < contentData.time ? childrenData : contentData;
-				} else {
-					return childrenData;
-				}
-			} else {
-				return contentData;
-			}
+            var result:RayIntersectionData = childrenData == null ? contentData : contentData == null ? childrenData : childrenData.time < contentData.time ? childrenData : contentData;
+            rayIntersectionContext.rayIntersectionData = result;
+            return result;
 		}
 
 		// TODO: Add removeSurface() method

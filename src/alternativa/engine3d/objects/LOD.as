@@ -13,7 +13,8 @@ package alternativa.engine3d.objects {
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.RayIntersectionData;
+    import alternativa.engine3d.core.RayIntersectionContext;
+    import alternativa.engine3d.core.RayIntersectionData;
 	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.events.Event3D;
 
@@ -269,15 +270,16 @@ package alternativa.engine3d.objects {
 		/**
 		 * @inheritDoc
 		 */
-		override public function intersectRay(origin:Vector3D, direction:Vector3D):RayIntersectionData {
+		override public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
             if (!includeInRayIntersect) return null;
-			var childrenData:RayIntersectionData = super.intersectRay(origin, direction);
+            if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
+            var childrenData:RayIntersectionData = super.intersectRay(origin, direction, rayIntersectionContext);
 			var contentData:RayIntersectionData;
 			var level:Object3D = levelList;
 			if (intersectionTestLevelName != null) {
 				level = getLevelByName(intersectionTestLevelName);
 			}
-			if (level != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
+			if (rayIntersectionContext.childrenCallStack == null && level != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
 				if (level.transformChanged) level.composeTransforms();
 				var childOrigin:Vector3D = new Vector3D();
 				var childDirection:Vector3D = new Vector3D();
@@ -287,17 +289,11 @@ package alternativa.engine3d.objects {
 				childDirection.x = level.inverseTransform.a*direction.x + level.inverseTransform.b*direction.y + level.inverseTransform.c*direction.z;
 				childDirection.y = level.inverseTransform.e*direction.x + level.inverseTransform.f*direction.y + level.inverseTransform.g*direction.z;
 				childDirection.z = level.inverseTransform.i*direction.x + level.inverseTransform.j*direction.y + level.inverseTransform.k*direction.z;
-				contentData = level.intersectRay(childOrigin, childDirection);
+				contentData = level.intersectRay(childOrigin, childDirection, rayIntersectionContext);
 			}
-			if (childrenData != null) {
-				if (contentData != null) {
-					return childrenData.time < contentData.time ? childrenData : contentData;
-				} else {
-					return childrenData;
-				}
-			} else {
-				return contentData;
-			}
+            var result:RayIntersectionData = childrenData == null ? contentData : contentData == null ? childrenData : childrenData.time < contentData.time ? childrenData : contentData;
+            rayIntersectionContext.rayIntersectionData = result;
+            return result;
 		}
 
 		/**

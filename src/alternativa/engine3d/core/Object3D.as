@@ -642,36 +642,57 @@ package alternativa.engine3d.core {
 		 * @see alternativa.engine3d.objects.Sprite3D
 		 * @see alternativa.engine3d.core.Camera3D#calculateRay()
 		 */
-		public function intersectRay(origin:Vector3D, direction:Vector3D):RayIntersectionData {
-			return includeInRayIntersect ? intersectRayChildren(origin, direction) : null;
+		public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
+            if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
+            if (rayIntersectionContext.childrenCallStack != null) {
+                if (rayIntersectionContext.childrenCallStack[0] == this) {
+                    rayIntersectionContext.checkedTrianglesNum = 0; // unwinding stack
+                    rayIntersectionContext.childrenCallStack.shift();
+                } else {
+                    rayIntersectionContext.reset();
+                }
+                if (rayIntersectionContext.childrenCallStack.length == 0) rayIntersectionContext.childrenCallStack = null;
+            }
+            var data:RayIntersectionData = includeInRayIntersect ? intersectRayChildren(origin, direction, rayIntersectionContext) : null;
+            if (rayIntersectionContext.childrenCallStack != null) rayIntersectionContext.childrenCallStack.unshift(this);
+            return data;
 		}
 
 		/**
 		 * @private
 		 */
-		alternativa3d function intersectRayChildren(origin:Vector3D, direction:Vector3D):RayIntersectionData {
-			var minTime:Number = 1e22;
-			var minData:RayIntersectionData = null;
+		alternativa3d function intersectRayChildren(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
+			var minTime:Number = Number.MAX_VALUE;
+			var minData:RayIntersectionData = rayIntersectionContext.rayIntersectionData;
 			var childOrigin:Vector3D = null;
 			var childDirection:Vector3D = null;
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
-				if (child.transformChanged) child.composeTransforms();
-				if (childOrigin == null) {
-					childOrigin = new Vector3D();
-					childDirection = new Vector3D();
-				}
-				childOrigin.x = child.inverseTransform.a*origin.x + child.inverseTransform.b*origin.y + child.inverseTransform.c*origin.z + child.inverseTransform.d;
-				childOrigin.y = child.inverseTransform.e*origin.x + child.inverseTransform.f*origin.y + child.inverseTransform.g*origin.z + child.inverseTransform.h;
-				childOrigin.z = child.inverseTransform.i*origin.x + child.inverseTransform.j*origin.y + child.inverseTransform.k*origin.z + child.inverseTransform.l;
-				childDirection.x = child.inverseTransform.a*direction.x + child.inverseTransform.b*direction.y + child.inverseTransform.c*direction.z;
-				childDirection.y = child.inverseTransform.e*direction.x + child.inverseTransform.f*direction.y + child.inverseTransform.g*direction.z;
-				childDirection.z = child.inverseTransform.i*direction.x + child.inverseTransform.j*direction.y + child.inverseTransform.k*direction.z;
-				var data:RayIntersectionData = child.intersectRay(childOrigin, childDirection);
-				if (data != null && data.time < minTime) {
-					minData = data;
-					minTime = data.time;
-				}
+            var stopped:Boolean = false;
+            if (rayIntersectionContext.childrenCallStack != null && rayIntersectionContext.childrenCallStack[0].parent != this) {
+                rayIntersectionContext.reset();
+            }
+            var list:Object3D = rayIntersectionContext.childrenCallStack == null ? childrenList : rayIntersectionContext.childrenCallStack[0];
+			for (var child:Object3D = list; !stopped && child != null; child = child.next) {
+                if (rayIntersectionContext.childrenCallStack == null || child == rayIntersectionContext.childrenCallStack[0]) {
+                    if (child.transformChanged) child.composeTransforms();
+                    if (childOrigin == null) {
+                        childOrigin = new Vector3D();
+                        childDirection = new Vector3D();
+                    }
+                    childOrigin.x = child.inverseTransform.a*origin.x + child.inverseTransform.b*origin.y + child.inverseTransform.c*origin.z + child.inverseTransform.d;
+                    childOrigin.y = child.inverseTransform.e*origin.x + child.inverseTransform.f*origin.y + child.inverseTransform.g*origin.z + child.inverseTransform.h;
+                    childOrigin.z = child.inverseTransform.i*origin.x + child.inverseTransform.j*origin.y + child.inverseTransform.k*origin.z + child.inverseTransform.l;
+                    childDirection.x = child.inverseTransform.a*direction.x + child.inverseTransform.b*direction.y + child.inverseTransform.c*direction.z;
+                    childDirection.y = child.inverseTransform.e*direction.x + child.inverseTransform.f*direction.y + child.inverseTransform.g*direction.z;
+                    childDirection.z = child.inverseTransform.i*direction.x + child.inverseTransform.j*direction.y + child.inverseTransform.k*direction.z;
+                    var data:RayIntersectionData = child.intersectRay(childOrigin, childDirection, rayIntersectionContext);
+                    if (data != null && data.time < minTime) {
+                        minData = data;
+                        minTime = data.time;
+                    }
+                    stopped = rayIntersectionContext.childrenCallStack != null;
+                }
 			}
+            rayIntersectionContext.rayIntersectionData = minData;
 			return minData;
 		}
 

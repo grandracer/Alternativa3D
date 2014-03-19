@@ -10,7 +10,8 @@ package alternativa.engine3d.resources {
 
 	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.core.BoundBox;
-	import alternativa.engine3d.core.RayIntersectionData;
+    import alternativa.engine3d.core.RayIntersectionContext;
+    import alternativa.engine3d.core.RayIntersectionData;
 	import alternativa.engine3d.core.Resource;
 	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.VertexAttributes;
