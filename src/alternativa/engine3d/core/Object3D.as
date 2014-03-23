@@ -648,10 +648,10 @@ package alternativa.engine3d.core {
             if (rayIntersectionContext.childrenCallStack != null) {
                 if (rayIntersectionContext.childrenCallStack[0] == this) {
                     rayIntersectionContext.childrenCallStack.shift();
+                    if (rayIntersectionContext.childrenCallStack.length == 0) rayIntersectionContext.childrenCallStack = null;
                 } else {
                     rayIntersectionContext.reset();
                 }
-                if (rayIntersectionContext.childrenCallStack.length == 0) rayIntersectionContext.childrenCallStack = null;
             }
             var data:RayIntersectionData = includeInRayIntersect ? intersectRayChildren(origin, direction, rayIntersectionContext) : null;
             if (rayIntersectionContext.childrenCallStack != null) rayIntersectionContext.childrenCallStack.unshift(this);
