@@ -100,31 +100,6 @@ package alternativa.engine3d.resources {
 		}
 
 		/**
-		 * @private
-		 * TODO: remove repeated method.
-		 */
-		alternativa3d function createMips(texture:Texture, bitmapData:BitmapData):void {
-			rect.width = bitmapData.width;
-			rect.height = bitmapData.height;
-			var level:int = 1;
-			var bmp:BitmapData = new BitmapData(rect.width, rect.height, bitmapData.transparent);
-			var current:BitmapData = bitmapData;
-			while (rect.width%2 == 0 || rect.height%2 == 0) {
-				bmp.applyFilter(current, rect, point, filter);
-				rect.width >>= 1;
-				rect.height >>= 1;
-				if (rect.width == 0) rect.width = 1;
-				if (rect.height == 0) rect.height = 1;
-				if (current != bitmapData) current.dispose();
-				current = new BitmapData(rect.width, rect.height, bitmapData.transparent, 0);
-				current.draw(bmp, matrix, null, null, null, false);
-				texture.uploadFromBitmapData(current, level++);
-			}
-			if (current != bitmapData) current.dispose();
-			bmp.dispose();
-		}
-
-		/**
 		 * @private 
 		 */
 		static alternativa3d function createMips(texture:Texture, bitmapData:BitmapData):void {
