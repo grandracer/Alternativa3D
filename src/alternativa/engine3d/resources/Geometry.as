@@ -86,6 +86,7 @@ package alternativa.engine3d.resources {
 		alternativa3d var _attributesOffsets:Vector.<int> = new Vector.<int>();
 
 		private var _attributesStrides:Vector.<int> = new Vector.<int>();
+		private var _unpackedPositions:Vector.<Number> = null;
 
 		/**
 		 * Creates a new instance.
@@ -775,9 +776,9 @@ package alternativa.engine3d.resources {
 			_vertexStreams[index].buffer.uploadFromByteArray(data, byteArrayOffset, startVertex, numVertices);
 		}
 
-        /**
-         * @private
-         */
+		/**
+		 * @private
+		 */
 		alternativa3d function intersectRay(origin:Vector3D, direction:Vector3D, indexBegin:uint, numTriangles:uint):RayIntersectionData {
 			var ox:Number = origin.x;
 			var oy:Number = origin.y;
@@ -812,15 +813,9 @@ package alternativa.engine3d.resources {
 			var minTime:Number = 1e+22;
 			var posAttribute:int = VertexAttributes.POSITION;
 			var uvAttribute:int = VertexAttributes.TEXCOORDS[0];
-			var positionStream:VertexStream;
-			if (VertexAttributes.POSITION >= _attributesStreams.length || (positionStream = _attributesStreams[posAttribute]) == null) {
-				throw new Error("Raycast require POSITION attribute");
+			if (_unpackedPositions == null) {
+				_unpackedPositions = getAttributeValues(posAttribute);
 			}
-			var positionBuffer:ByteArray = positionStream.data;
-			// Offset of position attribute.
-			const positionOffset:uint = _attributesOffsets[posAttribute]*4;
-			// Length of vertex on bytes.
-			var stride:uint = positionStream.attributes.length*4;
 
 			var uvStream:VertexStream;
 			var hasUV:Boolean = uvAttribute < _attributesStreams.length && (uvStream = _attributesStreams[uvAttribute]) != null;
@@ -838,41 +833,28 @@ package alternativa.engine3d.resources {
 			}
 			for (var i:int = indexBegin, count:int = indexBegin + numTriangles*3; i < count; i += 3) {
 				var indexA:uint = _indices[i];
-				var indexB:uint = _indices[int(i + 1)];
-				var indexC:uint = _indices[int(i + 2)];
-				positionBuffer.position = indexA*stride + positionOffset;
-				var ax:Number = positionBuffer.readFloat();
-				var ay:Number = positionBuffer.readFloat();
-				var az:Number = positionBuffer.readFloat();
+				var indexB:uint = _indices[i + 1];
+				var indexC:uint = _indices[i + 2];
+
+				var position:uint = indexA * 3;
+				var ax:Number = _unpackedPositions[position++];
+				var ay:Number = _unpackedPositions[position++];
+				var az:Number = _unpackedPositions[position++];
 				var au:Number;
 				var av:Number;
-				positionBuffer.position = indexB*stride + positionOffset;
-				var bx:Number = positionBuffer.readFloat();
-				var by:Number = positionBuffer.readFloat();
-				var bz:Number = positionBuffer.readFloat();
+				position = indexB * 3;
+				var bx:Number = _unpackedPositions[position++];
+				var by:Number = _unpackedPositions[position++];
+				var bz:Number = _unpackedPositions[position++];
 				var bu:Number;
 				var bv:Number;
 
-				positionBuffer.position = indexC*stride + positionOffset;
-				var cx:Number = positionBuffer.readFloat();
-				var cy:Number = positionBuffer.readFloat();
-				var cz:Number = positionBuffer.readFloat();
+				position = indexC * 3;
+				var cx:Number = _unpackedPositions[position++];
+				var cy:Number = _unpackedPositions[position++];
+				var cz:Number = _unpackedPositions[position++];
 				var cu:Number;
 				var cv:Number;
-
-				if (hasUV) {
-					uvBuffer.position = indexA*uvStride + uvOffset;
-					au = uvBuffer.readFloat();
-					av = uvBuffer.readFloat();
-
-					uvBuffer.position = indexB*uvStride + uvOffset;
-					bu = uvBuffer.readFloat();
-					bv = uvBuffer.readFloat();
-
-					uvBuffer.position = indexC*uvStride + uvOffset;
-					cu = uvBuffer.readFloat();
-					cv = uvBuffer.readFloat();
-				}
 
 				var abx:Number = bx - ax;
 				var aby:Number = by - ay;
@@ -926,6 +908,19 @@ package alternativa.engine3d.resources {
 											point.x = rx;
 											point.y = ry;
 											point.z = rz;
+											if (hasUV) {
+												uvBuffer.position = indexA*uvStride + uvOffset;
+												au = uvBuffer.readFloat();
+												av = uvBuffer.readFloat();
+
+												uvBuffer.position = indexB*uvStride + uvOffset;
+												bu = uvBuffer.readFloat();
+												bv = uvBuffer.readFloat();
+
+												uvBuffer.position = indexC*uvStride + uvOffset;
+												cu = uvBuffer.readFloat();
+												cv = uvBuffer.readFloat();
+											}
 											nax = ax;
 											nay = ay;
 											naz = az;
