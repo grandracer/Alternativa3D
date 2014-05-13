@@ -40,6 +40,7 @@ package alternativa.engine3d.resources {
 		 */
 		public function ATFTextureResource(data:ByteArray) {
 			this.data = data;
+			this._format = null;
 		}
 
 		/**
@@ -57,26 +58,25 @@ package alternativa.engine3d.resources {
 			if (_texture != null) _texture.dispose();
 
 			if (data != null) {
-				data.position = 6;
+				data.position = 12;
 				var type:uint = data.readByte();
-				var format:String;
 				switch (type & 0x7F) {
 					case 0:
 					case 1:
-						format = Context3DTextureFormat.BGRA;
+						_format = Context3DTextureFormat.BGRA;
 						break;
 					case 2:
 					case 3:
-						format = Context3DTextureFormat.COMPRESSED;
+						_format = Context3DTextureFormat.COMPRESSED;
 						break;
 					case 4:
 					case 5:
-						format = "compressedAlpha"; // Context3DTextureFormat.COMPRESSED_ALPHA
+						_format = "compressedAlpha"; // Context3DTextureFormat.COMPRESSED_ALPHA
 						break;
 				}
 
 				if ((type & ~0x7F) == 0) {
-					_texture = context3D.createTexture(1 << data.readByte(), 1 << data.readByte(), format, false);
+					_texture = context3D.createTexture(1 << data.readByte(), 1 << data.readByte(), _format, false);
 					if (async) {
 						uploadCallback = callback;
 						_texture.addEventListener("textureReady", onTextureReady);
@@ -84,7 +84,7 @@ package alternativa.engine3d.resources {
 					Texture(_texture).uploadCompressedTextureFromByteArray(data, 0, async);
 
 				} else {
-					_texture = context3D.createCubeTexture(1 << data.readByte(), format, false);
+					_texture = context3D.createCubeTexture(1 << data.readByte(), _format, false);
 					if (async) {
 						uploadCallback = callback;
 						_texture.addEventListener("textureReady", onTextureReady);
@@ -103,6 +103,5 @@ package alternativa.engine3d.resources {
 				uploadCallback = null;
 			}
 		}
-
 	}
 }
