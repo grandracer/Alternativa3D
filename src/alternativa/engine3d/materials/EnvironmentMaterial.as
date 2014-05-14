@@ -551,7 +551,7 @@ package alternativa.engine3d.materials {
 			}
 
 			fragmentLinker.declareVariable("tColor");
-			outputProcedure = opacityMap != null ? getDiffuseOpacityProcedure : getDiffuseProcedure;
+			outputProcedure = opacityMap != null ? getDiffuseOpacityProcedure(diffuseMap, opacityMap) : getDiffuseProcedure(diffuseMap);
 			fragmentLinker.addProcedure(outputProcedure);
 			fragmentLinker.setOutputParams(outputProcedure, "tColor");
 

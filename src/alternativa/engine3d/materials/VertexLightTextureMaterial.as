@@ -29,7 +29,8 @@ package alternativa.engine3d.materials {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.VertexBuffer3D;
+import flash.display3D.Context3DTextureFormat;
+import flash.display3D.VertexBuffer3D;
 	import flash.utils.Dictionary;
 
 	use namespace alternativa3d;
@@ -132,7 +133,9 @@ package alternativa.engine3d.materials {
 		 * @param lightsLength
 		 */
 		private function getProgram(object:Object3D, programs:Dictionary, camera:Camera3D, materialKey:String, opacityMap:TextureResource, alphaTest:int, lights:Vector.<Light3D>, lightsLength:int):VertexLightTextureMaterialProgram {
-			var key:String = materialKey + (opacityMap != null ? "O" : "o") + alphaTest.toString();
+			var opacityKey:String = (opacityMap != null ? "O" + (opacityMap._format == Context3DTextureFormat.BGRA ? "b" : opacityMap._format == Context3DTextureFormat.COMPRESSED ? "c" : "C") : "o");
+			var diffuseKey:String = (diffuseMap != null ? "D" + (diffuseMap._format == Context3DTextureFormat.BGRA ? "b" : diffuseMap._format == Context3DTextureFormat.COMPRESSED ? "c" : "C") : "d");
+			var key:String = materialKey + opacityKey + diffuseKey + alphaTest.toString();
 			var program:VertexLightTextureMaterialProgram = programs[key];
 			if (program == null) {
 				var vertexLinker:Linker = new Linker(Context3DProgramType.VERTEX);
@@ -193,7 +196,7 @@ package alternativa.engine3d.materials {
 
 				var fragmentLinker:Linker = new Linker(Context3DProgramType.FRAGMENT);
 				fragmentLinker.declareVariable("tColor");
-				var outputProcedure:Procedure = opacityMap != null ? getDiffuseOpacityProcedure : getDiffuseProcedure;
+				var outputProcedure:Procedure = opacityMap != null ? getDiffuseOpacityProcedure(diffuseMap, opacityMap) : getDiffuseProcedure(diffuseMap);
 				fragmentLinker.addProcedure(outputProcedure);
 				fragmentLinker.setOutputParams(outputProcedure, "tColor");
 

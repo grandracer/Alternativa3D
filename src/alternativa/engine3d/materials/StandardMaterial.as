@@ -21,7 +21,8 @@ package alternativa.engine3d.materials {
 	import alternativa.engine3d.lights.SpotLight;
 	import alternativa.engine3d.materials.compiler.Linker;
 	import alternativa.engine3d.materials.compiler.Procedure;
-	import alternativa.engine3d.materials.compiler.VariableType;
+import alternativa.engine3d.materials.compiler.ProcedureCodeTemplate;
+import alternativa.engine3d.materials.compiler.VariableType;
 	import alternativa.engine3d.objects.Surface;
 	import alternativa.engine3d.resources.Geometry;
 	import alternativa.engine3d.resources.TextureResource;
@@ -31,7 +32,8 @@ package alternativa.engine3d.materials {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.Context3DVertexBufferFormat;
+import flash.display3D.Context3DTextureFormat;
+import flash.display3D.Context3DVertexBufferFormat;
 	import flash.display3D.VertexBuffer3D;
 	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
@@ -169,16 +171,21 @@ package alternativa.engine3d.materials {
 			"mov o0.w, c0.y"
 		], "setGlossinessFromConstantProcedure");
 		// Set o.w to glossiness from texture
-		private static const _setGlossinessFromTextureProcedure:Procedure = new Procedure([
+		private static const _templateSetGlossinessFromTexture:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV",
 			"#c0=cSurface",
 			"#s0=sGlossiness",
-			"tex t0, v0, s0 <2d, repeat, linear, miplinear>",
+			"$tex t0, v0, s0 <2d, repeat, linear, miplinear>",
 			"mul o0.w, t0.x, c0.y"
-		], "setGlossinessFromTextureProcedure");
+		]);
+
+		static private function getSetGlossinessFromTextureProcedure(glossinessMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateSetGlossinessFromTexture.substitute(new <String>[glossinessMap._format]), "setGlossinessFromTextureProcedure");
+		}
 
 		// outputs : normal, viewVector
-		private static const _getNormalAndViewTangentProcedure:Procedure = new Procedure([
+		private static const _templateGetNormalAndViewTangent:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vTangent",
 			"#v1=vBinormal",
 			"#v2=vNormal",
@@ -187,7 +194,7 @@ package alternativa.engine3d.materials {
 			"#c0=cAmbientColor",
 			"#s0=sBump",
 			// Extract normal from the texture
-			"tex t0, v3, s0 <2d,repeat,linear,miplinear>",
+			"$tex t0, v3, s0 <2d,repeat,linear,miplinear>",
 			"add t0, t0, t0",
 			"sub t0.xyz, t0.xyz, c0.www",
 			// Transform the normal with TBN
@@ -201,30 +208,45 @@ package alternativa.engine3d.materials {
 			"nrm o0.xyz, o0.xyz",
 			// Returns normalized vector of view
 			"nrm o1.xyz, v4"
-		], "getNormalAndViewTangentProcedure");
+		]);
+
+		static private function getNormalAndViewTangentProcedure(normalMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateGetNormalAndViewTangent.substitute(new <String>[normalMap._format]), "getNormalAndViewTangentProcedure");
+		}
 		// outputs : normal, viewVector
-		private static const _getNormalAndViewObjectProcedure:Procedure = new Procedure([
+		private static const _templateGetNormalAndViewObject:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v3=vUV",
 			"#v4=vViewVector",
 			"#c0=cAmbientColor",
 			"#s0=sBump",
 			// Extract normal from the texture
-			"tex t0, v3, s0 <2d,repeat,linear,miplinear>",
+			"$tex t0, v3, s0 <2d,repeat,linear,miplinear>",
 			"add t0, t0, t0",
 			"sub t0.xyz, t0.xyz, c0.www",
 			// Normalization
 			"nrm o0.xyz, t0.xyz",
 			// Returns normalized vector of view
 			"nrm o1.xyz, v4"
-		], "getNormalAndViewObjectProcedure");
+		]);
+
+		static private function getNormalAndViewObjectProcedure(normalMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateGetNormalAndViewObject.substitute(new <String>[normalMap._format]), "getNormalAndViewObjectProcedure");
+		}
 
 		// Apply specular map color to a flare
-		private static const _applySpecularProcedure:Procedure = new Procedure([
+		private static const _templateApplySpecular:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV",
 			"#s0=sSpecular",
-			"tex t0, v0, s0 <2d, repeat,linear,miplinear>",
+			"$tex t0, v0, s0 <2d, repeat,linear,miplinear>",
 			"mul o0.xyz, o0.xyz, t0.xyz"
-		], "applySpecularProcedure");
+		]);
+
+		static private function getApplySpecularProcedure(specularMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateApplySpecular.substitute(new <String>[specularMap._format]), "applySpecularProcedure");
+		}
 
 		//Apply light and flare to diffuse
 		// inputs : "diffuse", "tTotalLight", "tTotalHighLight"
@@ -272,7 +294,7 @@ package alternativa.engine3d.materials {
 		], "postPassAdvancedFogConst");
 
 		// inputs : color
-		private static const outputWithAdvancedFogProcedure:Procedure = new Procedure([
+		private static const _templateOutputWithAdvancedFog:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vZDistance",
 			"#c0=cFogConsts",
 			"#c1=cFogRange",
@@ -286,20 +308,30 @@ package alternativa.engine3d.materials {
 			"div t0.z, v0.z, v0.w",
 			"mul t0.z, t0.z, c0.x",
 			"add t1.x, t1.x, t0.z",
-			"tex t1, t1, s0 <2d, repeat, linear, miplinear>",
+			"$tex t1, t1, s0 <2d, repeat, linear, miplinear>",
 			"mul t0.xyz, t1.xyz, t0.x",
 			"add i0.xyz, i0.xyz, t0.xyz",
 			"mov o0, i0"
-		], "outputWithAdvancedFog");
+		]);
+
+		static private function getOutputWithAdvancedFogProcedure(fogTexture:TextureResource):Procedure
+		{
+			return new Procedure(_templateOutputWithAdvancedFog.substitute(new <String>[fogTexture._format]), "outputWithAdvancedFog");
+		}
 
 		// Add lightmap value with light
-		private static const _addLightMapProcedure:Procedure = new Procedure([
+		private static const _templateAddLightMap:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV1",
 			"#s0=sLightMap",
-			"tex t0, v0, s0 <2d,repeat,linear,miplinear>",
+			"$tex t0, v0, s0 <2d,repeat,linear,miplinear>",
 			"add t0, t0, t0",
 			"add o0.xyz, i0.xyz, t0.xyz"
-		], "applyLightMapProcedure");
+		]);
+
+		static private function getAddLightMapProcedure(lightMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateAddLightMap.substitute(new <String>[lightMap._format]), "applyLightMapProcedure");
+		}
 
 		private static const _passLightMapUVProcedure:Procedure = new Procedure([
 			"#a0=aUV1",
@@ -547,8 +579,31 @@ package alternativa.engine3d.materials {
 			// 11-13 bits - DirectionalLight count
 			// 14-16 bits - SpotLight count
 			// 17-18 bit - Shadow Type (PCF, SIMPLE, NONE)
+			// 19-20 bit - diffuseMapFormat
+			// 21-22 bit - normalMapFormat
+			// 23-24 bit - lightMapFormat
+			// 25-26 bit - glossinessMapFormat
+			// 27-28 bit - opacityMapFormat
+			// 29-30 bit - specularMapFormat
+			// 31-32 bit - fogTextureFormat
 
-			var key:int = materialKey | (opacityMap != null ? OPACITY_MAP_BIT : 0) | (alphaTest << ALPHA_TEST_OFFSET);
+			var diffuseMapFormat:int = diffuseMap == null ? 0 : diffuseMap._format == Context3DTextureFormat.BGRA ? 1 : diffuseMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var normalMapFormat:int = normalMap == null ? 0 : normalMap._format == Context3DTextureFormat.BGRA ? 1 : normalMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var lightMapFormat:int = lightMap == null ? 0 : lightMap._format == Context3DTextureFormat.BGRA ? 1 : lightMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var glossinessMapFormat:int = glossinessMap == null ? 0 : glossinessMap._format == Context3DTextureFormat.BGRA ? 1 : glossinessMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var opacityMapFormat:int = opacityMap == null ? 0 : opacityMap._format == Context3DTextureFormat.BGRA ? 1 : opacityMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var specularMapFormat:int = specularMap == null ? 0 : specularMap._format == Context3DTextureFormat.BGRA ? 1 : specularMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var fogTextureFormat:int = fogTexture == null ? 0 : fogTexture._format == Context3DTextureFormat.BGRA ? 1 : fogTexture._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var key:int = materialKey
+					| (opacityMap != null ? OPACITY_MAP_BIT : 0)
+					| (alphaTest << ALPHA_TEST_OFFSET)
+					| (diffuseMapFormat << 19)
+					| (normalMapFormat << 21)
+					| (lightMapFormat << 23)
+					| (glossinessMapFormat << 25)
+					| (opacityMapFormat << 27)
+					| (specularMapFormat << 29)
+					| (fogTextureFormat << 31);
 			var program:StandardMaterialProgram = programs[key];
 
 			if (program == null) {
@@ -571,9 +626,10 @@ package alternativa.engine3d.materials {
 
 					if (lightMap != null) {
 						vertexLinker.addProcedure(_passLightMapUVProcedure);
-						fragmentLinker.addProcedure(_addLightMapProcedure);
-						fragmentLinker.setInputParams(_addLightMapProcedure, "tTotalLight");
-						fragmentLinker.setOutputParams(_addLightMapProcedure, "tTotalLight");
+						var addLightMapProcedure:Procedure = getAddLightMapProcedure(lightMap);
+						fragmentLinker.addProcedure(addLightMapProcedure);
+						fragmentLinker.setInputParams(addLightMapProcedure, "tTotalLight");
+						fragmentLinker.setOutputParams(addLightMapProcedure, "tTotalLight");
 					}
 				}
 				else{
@@ -600,8 +656,9 @@ package alternativa.engine3d.materials {
 				vertexLinker.addProcedure(getPassUVProcedure());
 
 				if (glossinessMap != null) {
-					fragmentLinker.addProcedure(_setGlossinessFromTextureProcedure);
-					fragmentLinker.setOutputParams(_setGlossinessFromTextureProcedure, "tTotalHighLight");
+					var setGlossinessFromTextureProcedure:Procedure = getSetGlossinessFromTextureProcedure(glossinessMap);
+					fragmentLinker.addProcedure(setGlossinessFromTextureProcedure);
+					fragmentLinker.setOutputParams(setGlossinessFromTextureProcedure, "tTotalHighLight");
 				} else {
 					fragmentLinker.addProcedure(_setGlossinessFromConstantProcedure);
 					fragmentLinker.setOutputParams(_setGlossinessFromConstantProcedure, "tTotalHighLight");
@@ -632,11 +689,13 @@ package alternativa.engine3d.materials {
 						var nrmProcedure:Procedure = (_normalMapSpace == NormalMapSpace.TANGENT_RIGHT_HANDED) ? _passTBNRightProcedure : _passTBNLeftProcedure;
 						vertexLinker.addProcedure(nrmProcedure);
 						vertexLinker.setInputParams(nrmProcedure, tangentVar, normalVar);
-						fragmentLinker.addProcedure(_getNormalAndViewTangentProcedure);
-						fragmentLinker.setOutputParams(_getNormalAndViewTangentProcedure, "tNormal", "tViewVector");
+						var normalAndViewTangentProcedure:Procedure = getNormalAndViewTangentProcedure(normalMap);
+						fragmentLinker.addProcedure(normalAndViewTangentProcedure);
+						fragmentLinker.setOutputParams(normalAndViewTangentProcedure, "tNormal", "tViewVector");
 					} else {
-						fragmentLinker.addProcedure(_getNormalAndViewObjectProcedure);
-						fragmentLinker.setOutputParams(_getNormalAndViewObjectProcedure, "tNormal", "tViewVector");
+						var normalAndViewObjectProcedure:Procedure = getNormalAndViewObjectProcedure(normalMap);
+						fragmentLinker.addProcedure(normalAndViewObjectProcedure);
+						fragmentLinker.setOutputParams(normalAndViewObjectProcedure, "tNormal", "tViewVector");
 					}
 					if (shadowedLight != null) {
 						var shadowProc:Procedure;
@@ -722,13 +781,14 @@ package alternativa.engine3d.materials {
 
 				var outputProcedure:Procedure;
 				if (specularMap != null) {
-					fragmentLinker.addProcedure(_applySpecularProcedure);
-					fragmentLinker.setOutputParams(_applySpecularProcedure, "tTotalHighLight");
-					outputProcedure = _applySpecularProcedure;
+					var applySpecularProcedure:Procedure = getApplySpecularProcedure(specularMap);
+					fragmentLinker.addProcedure(applySpecularProcedure);
+					fragmentLinker.setOutputParams(applySpecularProcedure, "tTotalHighLight");
+					outputProcedure = applySpecularProcedure;
 				}
 
 				fragmentLinker.declareVariable("tColor");
-				outputProcedure = opacityMap != null ? getDiffuseOpacityProcedure : getDiffuseProcedure;
+				outputProcedure = opacityMap != null ? getDiffuseOpacityProcedure(diffuseMap, opacityMap) : getDiffuseProcedure(diffuseMap);
 				fragmentLinker.addProcedure(outputProcedure);
 				fragmentLinker.setOutputParams(outputProcedure, "tColor");
 

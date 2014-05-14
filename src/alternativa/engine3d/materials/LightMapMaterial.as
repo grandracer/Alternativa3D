@@ -17,7 +17,8 @@ package alternativa.engine3d.materials {
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.materials.compiler.Linker;
 	import alternativa.engine3d.materials.compiler.Procedure;
-	import alternativa.engine3d.materials.compiler.VariableType;
+import alternativa.engine3d.materials.compiler.ProcedureCodeTemplate;
+import alternativa.engine3d.materials.compiler.VariableType;
 	import alternativa.engine3d.objects.Surface;
 	import alternativa.engine3d.resources.Geometry;
 	import alternativa.engine3d.resources.TextureResource;
@@ -27,7 +28,8 @@ package alternativa.engine3d.materials {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.VertexBuffer3D;
+import flash.display3D.Context3DTextureFormat;
+import flash.display3D.VertexBuffer3D;
 	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 
@@ -47,14 +49,19 @@ package alternativa.engine3d.materials {
 		private var programsCache:Dictionary;
 
 		// inputs: color
-		private static const _applyLightMapProcedure:Procedure = new Procedure([
+		private static const _templateApplyLightMap:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV1",
 			"#s0=sLightMap",
-			"tex t0, v0, s0 <2d,repeat,linear,miplinear>",
+			"$tex t0, v0, s0 <2d,repeat,linear,miplinear>",
 			"add t0, t0, t0",
 			"mul i0.xyz, i0.xyz, t0.xyz",
 			"mov o0, i0"
-		], "applyLightMapProcedure");
+		]);
+
+		private static function getApplyLightMapProcedure(lightMap:TextureResource):Procedure
+		{
+			return new Procedure(_templateApplyLightMap.substitute(new <String>[lightMap._format]), "applyLightMapProcedure");
+		}
 
 		private static const _passLightMapUVProcedure:Procedure = new Procedure([
 			"#a0=aUV1",
@@ -113,6 +120,11 @@ package alternativa.engine3d.materials {
 		 * @return
 		 */
 		private function getProgram(object:Object3D, programs:Vector.<LightMapMaterialProgram>, camera:Camera3D, opacityMap:TextureResource, alphaTest:int):LightMapMaterialProgram {
+			var opacityKey:int = opacityMap == null ? 0 : opacityMap._format == Context3DTextureFormat.BGRA ? 1 : opacityMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var diffuseKey:int = diffuseMap == null ? 0 : diffuseMap._format == Context3DTextureFormat.BGRA ? 1 : diffuseMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var lightKey:int = lightMap == null ? 0 : lightMap._format == Context3DTextureFormat.BGRA ? 1 : lightMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+
+			var key:int = (lightKey << 6) | (diffuseKey << 4) | (opacityKey << 2) | (alphaTest);
 			var key:int = (opacityMap != null ? 3 : 0) + alphaTest;
 			var program:LightMapMaterialProgram = programs[key];
 			if (program == null) {
@@ -133,7 +145,7 @@ package alternativa.engine3d.materials {
 				// Pixel shader
 				var fragmentLinker:Linker = new Linker(Context3DProgramType.FRAGMENT);
 				fragmentLinker.declareVariable("tColor");
-				var outProcedure:Procedure = (opacityMap != null ? getDiffuseOpacityProcedure : getDiffuseProcedure);
+				var outProcedure:Procedure = (opacityMap != null ? getDiffuseOpacityProcedure(diffuseMap, opacityMap) : getDiffuseProcedure(diffuseMap));
 				fragmentLinker.addProcedure(outProcedure);
 				fragmentLinker.setOutputParams(outProcedure, "tColor");
 
@@ -143,7 +155,7 @@ package alternativa.engine3d.materials {
 					fragmentLinker.setOutputParams(outProcedure, "tColor");
 				}
 
-				fragmentLinker.addProcedure(_applyLightMapProcedure, "tColor");
+				fragmentLinker.addProcedure(getApplyLightMapProcedure(lightMap), "tColor");
 
 				fragmentLinker.varyings = vertexLinker.varyings;
 
@@ -210,7 +222,7 @@ package alternativa.engine3d.materials {
 
 			var optionsPrograms:Vector.<LightMapMaterialProgram> = programsCache[object.transformProcedure];
 			if(optionsPrograms == null) {
-				optionsPrograms = new Vector.<LightMapMaterialProgram>(6, true);
+				optionsPrograms = new Vector.<LightMapMaterialProgram>(256, true);
 				programsCache[object.transformProcedure] = optionsPrograms;
 			}
 

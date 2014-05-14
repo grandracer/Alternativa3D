@@ -17,7 +17,8 @@ package alternativa.engine3d.materials {
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.materials.compiler.Linker;
 	import alternativa.engine3d.materials.compiler.Procedure;
-	import alternativa.engine3d.materials.compiler.VariableType;
+import alternativa.engine3d.materials.compiler.ProcedureCodeTemplate;
+import alternativa.engine3d.materials.compiler.VariableType;
 	import alternativa.engine3d.objects.Surface;
 	import alternativa.engine3d.resources.Geometry;
 	import alternativa.engine3d.resources.TextureResource;
@@ -27,7 +28,8 @@ package alternativa.engine3d.materials {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.VertexBuffer3D;
+import flash.display3D.Context3DTextureFormat;
+import flash.display3D.VertexBuffer3D;
 	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 
@@ -50,29 +52,39 @@ package alternativa.engine3d.materials {
 		 * @private
 		 * Procedure for diffuse map with alpha channel
 		 */
-		static alternativa3d const getDiffuseProcedure:Procedure = new Procedure([
+		static alternativa3d const templateDiffuseProcedure:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV",
 			"#s0=sDiffuse",
 			"#c0=cThresholdAlpha",
-			"tex t0, v0, s0 <2d, linear,repeat, miplinear>",
+			"$tex t0, v0, s0 <2d, linear,repeat,miplinear>",
 			"mul t0.w, t0.w, c0.w",
 			"mov o0, t0"
-		], "getDiffuseProcedure");
+		]);
+
+		static alternativa3d function getDiffuseProcedure(diffuseMap:TextureResource):Procedure
+		{
+			return new Procedure(templateDiffuseProcedure.substitute(new <String>[diffuseMap._format]), "getDiffuseOpacityProcedure");
+		}
 
 		/**
 		 * @private
 		 * Procedure for diffuse with opacity map.
 		 */
-		static alternativa3d const getDiffuseOpacityProcedure:Procedure = new Procedure([
+		static alternativa3d const templateDiffuseOpacityProcedure:ProcedureCodeTemplate = new ProcedureCodeTemplate([
 			"#v0=vUV",
 			"#s0=sDiffuse",
 			"#s1=sOpacity",
 			"#c0=cThresholdAlpha",
-			"tex t0, v0, s0 <2d, linear,repeat, miplinear>",
-			"tex t1, v0, s1 <2d, linear,repeat, miplinear>",
+			"$tex t0, v0, s0 <2d, linear,repeat,miplinear>",
+			"$tex t1, v0, s1 <2d, linear,repeat,miplinear>",
 			"mul t0.w, t1.x, c0.w",
 			"mov o0, t0"
-		], "getDiffuseOpacityProcedure");
+		]);
+
+		static alternativa3d function getDiffuseOpacityProcedure(diffuseMap:TextureResource, opacityMap:TextureResource):Procedure
+		{
+			return new Procedure(templateDiffuseOpacityProcedure.substitute(new <String>[diffuseMap._format, opacityMap._format]), "getDiffuseProcedure");
+		}
 
 		/**
 		 * @private
@@ -170,7 +182,9 @@ package alternativa.engine3d.materials {
 		 * @return
 		 */
 		private function getProgram(object:Object3D, programs:Vector.<TextureMaterialProgram>, camera:Camera3D, opacityMap:TextureResource, alphaTest:int):TextureMaterialProgram {
-			var key:int = (opacityMap != null ? 3 : 0) + alphaTest;
+			var opacityKey:int = opacityMap == null ? 0 : opacityMap._format == Context3DTextureFormat.BGRA ? 1 : opacityMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
+			var diffuseKey:int = diffuseMap._format == Context3DTextureFormat.BGRA ? 0 : diffuseMap._format == Context3DTextureFormat.COMPRESSED ? 1 : 2;
+			var key:int = (diffuseKey << 4) | (opacityKey << 2) | (alphaTest);
 			var program:TextureMaterialProgram = programs[key];
 			if (program == null) {
 				// Make program
@@ -188,7 +202,7 @@ package alternativa.engine3d.materials {
 
 				// Pixel shader
 				var fragmentLinker:Linker = new Linker(Context3DProgramType.FRAGMENT);
-				var outProcedure:Procedure = (opacityMap != null ? getDiffuseOpacityProcedure : getDiffuseProcedure);
+				var outProcedure:Procedure = (opacityMap != null ? getDiffuseOpacityProcedure(diffuseMap, opacityMap) : getDiffuseProcedure(diffuseMap));
 				fragmentLinker.addProcedure(outProcedure);
 				if (alphaTest > 0) {
 					fragmentLinker.declareVariable("tColor");
