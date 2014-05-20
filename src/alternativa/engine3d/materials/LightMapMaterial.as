@@ -125,7 +125,7 @@ import flash.display3D.VertexBuffer3D;
 			var lightKey:int = lightMap == null ? 0 : lightMap._format == Context3DTextureFormat.BGRA ? 1 : lightMap._format == Context3DTextureFormat.COMPRESSED ? 2 : 3;
 
 			var key:int = (lightKey << 6) | (diffuseKey << 4) | (opacityKey << 2) | (alphaTest);
-			var key:int = (opacityMap != null ? 3 : 0) + alphaTest;
+			//var key:int = (opacityMap != null ? 3 : 0) + alphaTest;
 			var program:LightMapMaterialProgram = programs[key];
 			if (program == null) {
 				// Make program

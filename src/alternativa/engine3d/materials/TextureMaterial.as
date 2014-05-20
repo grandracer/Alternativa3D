@@ -271,7 +271,7 @@ import flash.display3D.VertexBuffer3D;
 			}
 			var optionsPrograms:Vector.<TextureMaterialProgram> = programsCache[object.transformProcedure];
 			if(optionsPrograms == null) {
-				optionsPrograms = new Vector.<TextureMaterialProgram>(6, true);
+				optionsPrograms = new Vector.<TextureMaterialProgram>(64, true);
 				programsCache[object.transformProcedure] = optionsPrograms;
 			}
 
