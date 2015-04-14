@@ -733,6 +733,20 @@ package alternativa.engine3d.core {
 			return res;
 		}
 
+		public function storeLocalToGlobal(point:Vector3D, result:Vector3D):void {
+			if (transformChanged) composeTransforms();
+			trm.copy(transform);
+			var root:Object3D = this;
+			while (root.parent != null) {
+				root = root.parent;
+				if (root.transformChanged) root.composeTransforms();
+				trm.append(root.transform);
+			}
+			result.x = trm.a*point.x + trm.b*point.y + trm.c*point.z + trm.d;
+			result.y = trm.e*point.x + trm.f*point.y + trm.g*point.z + trm.h;
+			result.z = trm.i*point.x + trm.j*point.y + trm.k*point.z + trm.l;
+		}
+
 		/**
 		 * Converts the <code>Vector3D</code> object from the root <code>Object3D</code> (global) coordinates to the local <code>Object3D</code>'s own coordinates.
 		 * @param point Point in coordinates of root <code>Object3D</code>.
@@ -752,6 +766,20 @@ package alternativa.engine3d.core {
 			res.y = trm.e*point.x + trm.f*point.y + trm.g*point.z + trm.h;
 			res.z = trm.i*point.x + trm.j*point.y + trm.k*point.z + trm.l;
 			return res;
+		}
+
+		public function storeGlobalToLocal(point:Vector3D, result:Vector3D):void {
+			if (transformChanged) composeTransforms();
+			trm.copy(inverseTransform);
+			var root:Object3D = this;
+			while (root.parent != null) {
+				root = root.parent;
+				if (root.transformChanged) root.composeTransforms();
+				trm.prepend(root.inverseTransform);
+			}
+			result.x = trm.a*point.x + trm.b*point.y + trm.c*point.z + trm.d;
+			result.y = trm.e*point.x + trm.f*point.y + trm.g*point.z + trm.h;
+			result.z = trm.i*point.x + trm.j*point.y + trm.k*point.z + trm.l;
 		}
 
 		/**
