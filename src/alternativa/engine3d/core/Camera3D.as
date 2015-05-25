@@ -3,7 +3,7 @@
  * If it is not possible or desirable to put the notice in a particular file, then You may include the notice in a location (such as a LICENSE file in a relevant directory) where a recipient would be likely to look for such a notice.
  * You may add additional accurate notices of copyright ownership.
  *
- * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/ 
+ * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/
  * */
 
 package alternativa.engine3d.core {
@@ -82,7 +82,7 @@ public class Camera3D extends Object3D {
 	 *  Determines whether context 3D is cleared prior to render (e.g. for layering with Starling output)
 	 */
 	public var renderClearsContext:Boolean = true;
-	
+
 	/**
 	 *  Determines whether context 3D is presented after render (e.g. set false if Starling takes responsibilty for that)
 	 */
@@ -365,7 +365,7 @@ public class Camera3D extends Object3D {
 					directions[i] = new Vector3D();
 				}
 				raysLength = view.raysLength;
-				
+
 				if (renderClearsContext) {
 					var r:Number = ((view.backgroundColor >> 16) & 0xff)/0xff;
 					var g:Number = ((view.backgroundColor >> 8) & 0xff)/0xff;
@@ -377,7 +377,7 @@ public class Camera3D extends Object3D {
 					}
 					context3D.clear(r, g, b, view.backgroundAlpha);
 				}
-				
+
 				// Check getting in frustum and occluding
 				if (root.culling >= 0 && (root.boundBox == null || occludersLength == 0 || !root.boundBox.checkOcclusion(occluders, occludersLength, root.localToCameraTransform))) {
 					// Check if the ray crossing the bounding box
@@ -451,10 +451,10 @@ public class Camera3D extends Object3D {
 		childLights.length = 0;
 		occluders.length = 0;
 	}
-	
+
 	/**
 	 * Setup Camera3D position using x, y, z coordinates
-	 */	
+	 */
 	public function setPosition(x:Number, y:Number, z:Number):void{
 		this.x = x;
 		this.y = y;
@@ -519,6 +519,16 @@ public class Camera3D extends Object3D {
 		res.x = res.x * focalLength / res.z + viewSizeX;
 		res.y = res.y * focalLength / res.z + viewSizeY;
 		return res;
+	}
+
+	public function storeGlobalProjection(point:Vector3D, result:Vector3D):void {
+		if (view == null) throw new Error("It is necessary to have view set.");
+		var viewSizeX:Number = view._width * 0.5;
+		var viewSizeY:Number = view._height * 0.5;
+		var focalLength:Number = Math.sqrt(viewSizeX * viewSizeX + viewSizeY * viewSizeY) / Math.tan(fov * 0.5);
+		storeGlobalToLocal(point, result);
+		result.x = result.x * focalLength / result.z + viewSizeX;
+		result.y = result.y * focalLength / result.z + viewSizeY;
 	}
 
 	/**
