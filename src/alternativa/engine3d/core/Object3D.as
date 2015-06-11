@@ -712,6 +712,35 @@ package alternativa.engine3d.core {
 			return new Matrix3D(Vector.<Number>([trm.a, trm.e, trm.i, 0, trm.b, trm.f, trm.j, 0, trm.c, trm.g, trm.k, 0, trm.d, trm.h, trm.l, 1]));
 		}
 
+		private static var _storeConcatenatedMatrix$buffer:Vector.<Number> = new Vector.<Number>(16, true);
+		public function storeConcatenatedMatrix(result:Matrix3D):void {
+			if (transformChanged) composeTransforms();
+			trm.copy(transform);
+			var root:Object3D = this;
+			while (root.parent != null) {
+				root = root.parent;
+				if (root.transformChanged) root.composeTransforms();
+				trm.append(root.transform);
+			}
+			_storeConcatenatedMatrix$buffer[0] = trm.a;
+			_storeConcatenatedMatrix$buffer[1] = trm.e;
+			_storeConcatenatedMatrix$buffer[2] = trm.i;
+			_storeConcatenatedMatrix$buffer[3] = 0;
+			_storeConcatenatedMatrix$buffer[4] = trm.b;
+			_storeConcatenatedMatrix$buffer[5] = trm.f;
+			_storeConcatenatedMatrix$buffer[6] = trm.j;
+			_storeConcatenatedMatrix$buffer[7] = 0;
+			_storeConcatenatedMatrix$buffer[8] = trm.c;
+			_storeConcatenatedMatrix$buffer[9] = trm.g;
+			_storeConcatenatedMatrix$buffer[10] = trm.k;
+			_storeConcatenatedMatrix$buffer[11] = 0;
+			_storeConcatenatedMatrix$buffer[12] = trm.d;
+			_storeConcatenatedMatrix$buffer[13] = trm.h;
+			_storeConcatenatedMatrix$buffer[14] = trm.l;
+			_storeConcatenatedMatrix$buffer[15] = 1;
+			result.rawData = _storeConcatenatedMatrix$buffer;
+		}
+
 		/**
 		 * Converts the <code>Vector3D</code> object from the <code>Object3D</code>'s own (local) coordinates to the root <code>Object3D</code> (global) coordinates.
 		 * @param point Point in local coordinates of <code>Object3D</code>.
