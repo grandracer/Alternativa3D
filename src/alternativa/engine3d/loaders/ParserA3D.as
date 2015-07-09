@@ -161,7 +161,7 @@ class DummyClientLog implements IClientLog {
 	public function logError(channelName:String, text:String, ...vars):void {
 	}
 
-	public function log(channelName:String, text:String, ...rest):void {
+	public function log(channelName:String, text:String, ... rest):void {
 	}
 
 	public function getChannelStrings(channelName:String):Vector.<String> {
