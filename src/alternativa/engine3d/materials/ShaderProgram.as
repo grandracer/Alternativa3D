@@ -10,8 +10,9 @@ package alternativa.engine3d.materials {
 
 	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.materials.compiler.Linker;
+    import alternativa.engine3d.materials.compiler.Procedure;
 
-	import flash.display3D.Context3D;
+    import flash.display3D.Context3D;
 	import flash.display3D.Program3D;
 
 	use namespace alternativa3d;
@@ -42,6 +43,7 @@ package alternativa.engine3d.materials {
 				try {
 					program.upload(vertexShader.data, fragmentShader.data);
 				} catch (e:Error) {
+                    trace(fragmentShader.describeLinkageInfo());
 					throw (e);
 				}
 			} else {

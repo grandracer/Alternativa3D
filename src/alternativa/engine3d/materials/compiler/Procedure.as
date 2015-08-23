@@ -21,6 +21,8 @@ package alternativa.engine3d.materials.compiler {
 	public class Procedure {
 		// Name of procedure
 		public var name:String;
+        public var source:Array;
+        public var textureReads:int;
 
 		/**
 		 * @private
@@ -135,7 +137,9 @@ package alternativa.engine3d.materials.compiler {
 		/**
 		 * Compiles shader from the array of strings.
 		 */
-		public function compileFromArray(source:Array):void {
+		public function compileFromArray(source_:Array):void {
+            source = source_;
+            textureReads = 0;
 			for (var i:int = 0; i < 8; i++) {
 				variablesUsages[i] = new Vector.<Variable>();
 			}
@@ -421,6 +425,7 @@ package alternativa.engine3d.materials.compiler {
 					slotsCount++;
 					break;
 				case "tex":
+                    textureReads++;
 					type = CommandType.TEX;
 					source2 = new SamplerVariable(operands[3]);
 					addVariableUsage(source2);

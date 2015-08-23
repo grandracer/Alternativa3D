@@ -381,6 +381,7 @@ package alternativa.engine3d.materials.compiler {
 			var result:String = "LINKER:\n";
 			var totalCodes:uint = 0;
 			var totalCommands:uint = 0;
+            var totalTextureReads:int = 0;
 			for (var i:int = 0; i < procedures.length; i++) {
 				var p:Procedure = procedures[i];
 				if (p.name != null) {
@@ -405,11 +406,12 @@ package alternativa.engine3d.materials.compiler {
 					result = result.substr(0, result.length - 1);
 					result += ")";
 				}
-				result += " [IS:" + p.slotsCount.toString() + ", CMDS:" + p.commandsCount.toString() + "]\n";
+				result += " [IS:" + p.slotsCount.toString() + ", CMDS:" + p.commandsCount.toString() + ", TEXTURE READS: " + p.textureReads + "]\n";
 				totalCodes += p.slotsCount;
 				totalCommands += p.commandsCount;
+                totalTextureReads += p.textureReads;
 			}
-			result += "[IS:" + totalCodes.toString() + ", CMDS:" + totalCommands.toString() + "]\n";
+			result += "[IS:" + totalCodes.toString() + ", CMDS:" + totalCommands.toString() + ", TEXTURE READS: " + totalTextureReads + "]\n";
 			return result;
 		}
 
