@@ -75,6 +75,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setTextureAt(sampler:int, texture:TextureBase):void {
+            if (sampler == -1) return;
 			if (uint(sampler) > 8) throw new Error("Sampler index " + sampler + " is out of bounds.");
 			if (texture == null) throw new Error("Texture is null");
 			texturesSamplers[texturesLength] = sampler;
@@ -93,6 +94,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setVertexConstantsFromVector(firstRegister:int, data:Vector.<Number>, numRegisters:int):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > (128 - numRegisters)) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + numRegisters > vertexConstantsRegistersCount) {
@@ -106,6 +108,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setVertexConstantsFromNumbers(firstRegister:int, x:Number, y:Number, z:Number, w:Number = 1):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > 127) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + 1 > vertexConstantsRegistersCount) {
@@ -119,6 +122,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setVertexConstantsFromTransform(firstRegister:int, transform:Transform3D):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > 125) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + 3 > vertexConstantsRegistersCount) {
@@ -143,6 +147,7 @@ package alternativa.engine3d.core {
 		 * @private
 		 */
 		alternativa3d function setProjectionConstants(camera:Camera3D, firstRegister:int, transform:Transform3D = null):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > 124) throw new Error("Register index is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + 4 > vertexConstantsRegistersCount) {
@@ -199,6 +204,7 @@ package alternativa.engine3d.core {
 		}
 
 		alternativa3d function setFragmentConstantsFromVector(firstRegister:int, data:Vector.<Number>, numRegisters:int):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > (28 - numRegisters)) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + numRegisters > fragmentConstantsRegistersCount) {
@@ -211,6 +217,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setFragmentConstantsFromNumbers(firstRegister:int, x:Number, y:Number, z:Number, w:Number = 1):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > 27) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + 1 > fragmentConstantsRegistersCount) {
@@ -223,6 +230,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setFragmentConstantsFromTransform(firstRegister:int, transform:Transform3D):void {
+            if (firstRegister == -1) return;
 			if (uint(firstRegister) > 25) throw new Error("Register index " + firstRegister + " is out of bounds.");
 			var offset:int = firstRegister << 2;
 			if (firstRegister + 3 > fragmentConstantsRegistersCount) {
