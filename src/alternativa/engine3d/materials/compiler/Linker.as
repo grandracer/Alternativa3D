@@ -361,6 +361,7 @@ package alternativa.engine3d.materials.compiler {
 				if (vUsage == null) continue;
 				if (vUsage.isRelative) continue;
 				var variable:Variable = variables[vUsage.name];
+                if (variable == null) throw new Error('Unused variable ' + VariableType.TYPE_NAMES[vUsage.type] + ' #' + vUsage.index.toString() + ' ' + vUsage.name);
 				if (variable.index < 0) {
 					variable.index = _locals[type];
 					_locals[type] += variable.size;

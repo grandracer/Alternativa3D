@@ -118,12 +118,16 @@ package alternativa.engine3d.materials.compiler {
 		 * @see VariableType
 		 */
 		public function assignVariableName(type:uint, index:uint, name:String, size:uint = 1):void {
-			var v:Variable = variablesUsages[type][index];
-			while (v != null) {
-				v.size = size;
-				v.name = name;
-				v = v.next;
-			}
+            if (index < variablesUsages[type].length)
+            {
+                var v:Variable = variablesUsages[type][index];
+                while (v != null)
+                {
+                    v.size = size;
+                    v.name = name;
+                    v = v.next;
+                }
+            }
 		}
 
 		/**

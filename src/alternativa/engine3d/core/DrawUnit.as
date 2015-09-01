@@ -84,6 +84,7 @@ package alternativa.engine3d.core {
 		}
 		
 		alternativa3d function setVertexBufferAt(index:int, buffer:VertexBuffer3D, bufferOffset:int, format:String):void {
+            if (index == -1) return;
 			if (uint(index) > 8) throw new Error("VertexBuffer index " + index + " is out of bounds.");
 			if (buffer == null) throw new Error("Buffer is null");
 			vertexBuffersIndexes[vertexBuffersLength] = index;
