@@ -379,7 +379,7 @@ package alternativa.engine3d.materials.compiler {
 		 */
 		public function describeLinkageInfo():String {
 			var str:String;
-			var result:String = "LINKER:\n";
+			var result:String = "";
 			var totalCodes:uint = 0;
 			var totalCommands:uint = 0;
             var totalTextureReads:int = 0;

@@ -9,8 +9,8 @@
 package alternativa.engine3d.materials {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.materials.compiler.Linker;
-    import alternativa.engine3d.materials.compiler.Procedure;
+    import alternativa.engine3d.materials.compiler.Disassembler;
+    import alternativa.engine3d.materials.compiler.Linker;
 
     import flash.display3D.Context3D;
 	import flash.display3D.Program3D;
@@ -43,7 +43,7 @@ package alternativa.engine3d.materials {
 				try {
 					program.upload(vertexShader.data, fragmentShader.data);
 				} catch (e:Error) {
-                    trace(fragmentShader.describeLinkageInfo());
+                    trace('Fragment shader summary:\n\n' + fragmentShader.describeLinkageInfo() + '\n\nFragment shader:\n\n' + new Disassembler().disassemble(fragmentShader.data));
 					throw (e);
 				}
 			} else {
