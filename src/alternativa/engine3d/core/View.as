@@ -18,6 +18,8 @@ package alternativa.engine3d.core {
 	import alternativa.engine3d.objects.Surface;
 	import alternativa.engine3d.resources.Geometry;
 
+	import avmplus.getQualifiedClassName;
+
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
@@ -544,8 +546,23 @@ package alternativa.engine3d.core {
 				point.x = 0;
 				point.y = 0;
 				coords = localToGlobal(point);
-				if (coords.x < 0) coords.x = 0;
-				if (coords.y < 0) coords.y = 0;
+				if (coords.x < 0 || coords.y < 0)
+				{
+					trace('----- WARNING START -----');
+
+					var sc:Function = function(x:Number, y:Number):String { return '(x, y) = (' + x + ', ' + y + ')'; };
+
+					var object:DisplayObject = this;
+					while (object != null)
+					{
+						var gc:Point = new Point(NaN, NaN);
+						if (object.parent != null) gc = object.parent.localToGlobal(new Point(object.x, object.y));
+						trace(getQualifiedClassName(object), 'L' + sc(object.x, object.y), 'G' + sc(gc.x, gc.y));
+						object = object.parent;
+					}
+
+					trace('----- WARNING END -----');
+				}
 				stage3D.x = coords.x;
 				stage3D.y = coords.y;
 				stage3D.visible = vis;
