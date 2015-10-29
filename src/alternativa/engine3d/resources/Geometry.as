@@ -606,10 +606,6 @@ package alternativa.engine3d.resources {
 		 * @see VertexAttributes
 		 */
 		public function getAttributeOffset(attribute:uint):int {
-			var vBuffer:VertexStream = (attribute < _attributesStreams.length) ? _attributesStreams[attribute] : null;
-			if (vBuffer == null) {
-				throw new Error("Attribute not found.");
-			}
 			return _attributesOffsets[attribute];
 		}
 
@@ -642,6 +638,7 @@ package alternativa.engine3d.resources {
 			}
 		}
 
+        [Deprecated]
 		public function getAttributeValues(attribute:uint):Vector.<Number> {
 			var vBuffer:VertexStream = (attribute < _attributesStreams.length) ? _attributesStreams[attribute] : null;
 			if (vBuffer == null) {
@@ -662,6 +659,21 @@ package alternativa.engine3d.resources {
 			}
 			return result;
 		}
+
+        public function getAttributeBuffer(attribute:uint):ByteArray
+        {
+            return _attributesStreams[attribute].data;
+        }
+
+        public function getAttributeByteStride(attribute:uint):int
+        {
+            return 4 * _attributesStreams[attribute].attributes.length;
+        }
+
+        public function getAttributeByteOffset(attribute:uint):int
+        {
+            return 4 * _attributesOffsets[attribute];
+        }
 
 		/**
 		 * Check for existence of resource in video memory.
