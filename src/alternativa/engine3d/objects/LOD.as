@@ -245,6 +245,7 @@ package alternativa.engine3d.objects {
 					camera.childLights[childLightsLength] = light;
 					childLightsLength++;
 				}
+                sortLights(camera.childLights, childLightsLength);
 				child.collectDraws(camera, camera.childLights, childLightsLength, useShadow);
 			} else {
 				child.collectDraws(camera, null, 0, useShadow);

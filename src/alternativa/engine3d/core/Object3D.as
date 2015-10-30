@@ -1681,6 +1681,7 @@ package alternativa.engine3d.core {
 									childLightsLength++;
 								}
 							}
+                            sortLights(camera.childLights, childLightsLength);
 							child.collectDraws(camera, camera.childLights, childLightsLength, useShadow&&child.useShadow);
 						} else {
 							child.collectDraws(camera, null, 0, useShadow&&child.useShadow);
@@ -1693,6 +1694,43 @@ package alternativa.engine3d.core {
 				}
 			}
 		}
+
+        private static const LIGHT_TYPE_COUNT:int = 5;
+
+        private static var __sortLights$buffers:Vector.<Vector.<Light3D>>;
+        private static var __sortLights$bufferSize:Vector.<int>;
+
+        protected static function sortLights(lights:Vector.<Light3D>, length:int):void
+        {
+            if (length < 2) return;
+            if (__sortLights$buffers == null)
+            {
+                __sortLights$buffers = new Vector.<Vector.<Light3D>>(LIGHT_TYPE_COUNT, true);
+                __sortLights$bufferSize = new Vector.<int>(LIGHT_TYPE_COUNT, true);
+                for (var i:int = 0; i < LIGHT_TYPE_COUNT; i++)
+                    __sortLights$buffers[i] = new Vector.<Light3D>(64, true);
+            }
+
+            for (var i:int = 0; i < LIGHT_TYPE_COUNT; i++)
+                __sortLights$bufferSize[i] = 0;
+
+            for (var i:int = 0; i < length; i++)
+            {
+                var light:Light3D = lights[i];
+                var lightType:int = light.type;
+                __sortLights$buffers[lightType][__sortLights$bufferSize[lightType]] = light;
+                __sortLights$bufferSize[lightType]++;
+            }
+
+            var pos:int = 0;
+            for (var i:int = 0; i < LIGHT_TYPE_COUNT; i++)
+            {
+                var buffer:Vector.<Light3D> = __sortLights$buffers[i];
+                var lightsCount:int = __sortLights$bufferSize[i];
+                for (var j:int = 0; j < lightsCount; j++, pos++)
+                    lights[pos] = buffer[j];
+            }
+        }
 
 		/**
 		 * @private

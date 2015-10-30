@@ -352,7 +352,7 @@ public class Camera3D extends Object3D {
 				lights.length = j;
 
 				// Sort lights by types
-				if (lightsLength > 0) sortLights(0, lightsLength - 1);
+				sortLights(lights, lightsLength);
 
 				// Calculating the rays of mouse events
 				view.calculateRays(this, (globalMouseHandlingType & Object3D.MOUSE_HANDLING_MOVING) != 0,
@@ -422,6 +422,7 @@ public class Camera3D extends Object3D {
 								childLightsLength++;
 							}
 						}
+                        sortLights(childLights, childLightsLength);
 						root.collectDraws(this, childLights, childLightsLength, root.useShadow);
 					} else {
 						root.collectDraws(this, null, 0, root.useShadow);
@@ -472,37 +473,6 @@ public class Camera3D extends Object3D {
 		rotationX = rotX - 0.5 * Math.PI;
 		rotationY = 0;
 		rotationZ =  -  Math.atan2(deltaX,deltaY);
-	}
-
-	/**
-	 * @private
-	 */
-	private function sortLights(l:int, r:int):void {
-		var i:int = l;
-		var j:int = r;
-		var left:Light3D;
-		var index:int = (r + l) >> 1;
-		var m:Light3D = lights[index];
-		var mid:int = m.type;
-		var right:Light3D;
-		do {
-			while ((left = lights[i]).type < mid) {
-				i++;
-			}
-			while (mid < (right = lights[j]).type) {
-				j--;
-			}
-			if (i <= j) {
-				lights[i++] = right;
-				lights[j--] = left;
-			}
-		} while (i <= j);
-		if (l < j) {
-			sortLights(l, j);
-		}
-		if (i < r) {
-			sortLights(i, r);
-		}
 	}
 
 	/**
