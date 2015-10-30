@@ -738,7 +738,7 @@ package alternativa.engine3d.core {
 			_storeConcatenatedMatrix$buffer[13] = trm.h;
 			_storeConcatenatedMatrix$buffer[14] = trm.l;
 			_storeConcatenatedMatrix$buffer[15] = 1;
-			result.rawData = _storeConcatenatedMatrix$buffer;
+            result.copyRawDataFrom(_storeConcatenatedMatrix$buffer);
 		}
 
 		/**
