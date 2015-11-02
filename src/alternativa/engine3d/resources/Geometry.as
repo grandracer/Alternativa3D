@@ -3,7 +3,7 @@
  * If it is not possible or desirable to put the notice in a particular file, then You may include the notice in a location (such as a LICENSE file in a relevant directory) where a recipient would be likely to look for such a notice.
  * You may add additional accurate notices of copyright ownership.
  *
- * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/ 
+ * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/
  * */
 
 package alternativa.engine3d.resources {
@@ -59,7 +59,7 @@ package alternativa.engine3d.resources {
 		 * @private
 		 */
 		alternativa3d var _vertexStreams:Vector.<VertexStream> = new Vector.<VertexStream>();
-		
+
 		/**
 		 * @private
 		 */
@@ -69,7 +69,7 @@ package alternativa.engine3d.resources {
 		 * @private
 		 */
 		alternativa3d var _numVertices:int;
-		
+
 		/**
 		 * @private
 		 */
@@ -108,7 +108,7 @@ package alternativa.engine3d.resources {
 		 * Example of specifying of surface, that consists of two triangles: <code> Vector.&lt;uint&gt;([vertex_id_1,vertex_id_2,vertex_id_3,vertex_id_4,vertex_id_5,vertex_id_6]);</code>.
 		 */
 		public function get indices():Vector.<uint> {
-			return _indices.slice();
+			return _indices.concat();
 		}
 
 		/**
@@ -118,7 +118,7 @@ package alternativa.engine3d.resources {
 			if (value == null) {
 				_indices.length = 0;
 			} else {
-				_indices = value.slice()
+				_indices = value.concat()
 			}
 		}
 
@@ -153,7 +153,7 @@ package alternativa.engine3d.resources {
 			geometry.clonePropertiesFrom(this);
 			return geometry;
 		}
-		
+
 		/**
 		 * Copies basic properties of <code>Geometry</code>. This method calls from  <code>clone()</code> method.
 		 * @param source <code>Geometry</code>, properties of  which will be copied.
@@ -168,9 +168,9 @@ package alternativa.engine3d.resources {
 				_vertexStreams[i].data.position = source._vertexStreams[i].data.position;
 			}
 			_numVertices = source._numVertices;
-			_indices = source._indices.slice();
+			_indices = source._indices.concat();
 		}
-		
+
 		/**
 		 * Calculation of vertex normals.
 		 */
@@ -543,7 +543,7 @@ package alternativa.engine3d.resources {
 				}
 				attribute = next;
 			}
-			vBuffer.attributes = attributes.slice();
+			vBuffer.attributes = attributes.concat();
 			//			vBuffer.data = new Vector.<Number>(numMappings*_numVertices);
 			vBuffer.data = new ByteArray();
 			vBuffer.data.endian = Endian.LITTLE_ENDIAN;
@@ -565,7 +565,7 @@ package alternativa.engine3d.resources {
 		 * @return mapping.
 		 */
 		public function getVertexStreamAttributes(index:int):Array {
-			return _vertexStreams[index].attributes.slice();
+			return _vertexStreams[index].attributes.concat();
 		}
 
 		/**

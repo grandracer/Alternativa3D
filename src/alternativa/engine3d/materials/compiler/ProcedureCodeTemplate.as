@@ -32,7 +32,7 @@ public class ProcedureCodeTemplate {
 
 	public function substitute(textureModes:Vector.<String>):Array
 	{
-		var output:Array = _templateInstructions.slice();
+		var output:Array = _templateInstructions.concat();
 
 		var substitution:String;
 		for (var i:int = 0; i < _substitutionIndices.length; ++i) {

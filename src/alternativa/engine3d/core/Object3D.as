@@ -3,7 +3,7 @@
  * If it is not possible or desirable to put the notice in a particular file, then You may include the notice in a location (such as a LICENSE file in a relevant directory) where a recipient would be likely to look for such a notice.
  * You may add additional accurate notices of copyright ownership.
  *
- * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/ 
+ * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/
  * */
 
 package alternativa.engine3d.core {
@@ -1235,7 +1235,7 @@ package alternativa.engine3d.core {
 			child._parent = null;
 			return child;
 		}
-		
+
 		/**
 		 * Removes child objects in given range of indexes.
 		 * @param beginIndex Index, starts from which objects should be removed.
@@ -1290,7 +1290,7 @@ package alternativa.engine3d.core {
 				begin = next;
 			}
 		}
-		
+
 		/**
 		 * Returns the child <code>Object3D</code> instance that exists at the specified index.
 		 * @param index Position of wished child.
@@ -1484,7 +1484,7 @@ package alternativa.engine3d.core {
 				}
 			}
 		}
-		
+
 		/**
 		 * @private
 		 */
@@ -1504,7 +1504,7 @@ package alternativa.engine3d.core {
 			}
 			return null;
 		}
-		
+
 		/**
 		 * Gather the resources of this <code>Object3D</code>. This resources should be uploaded in the <code>Context3D</code> in order to <code>Object3D</code> can be rendered.
 		 *
@@ -1796,7 +1796,7 @@ package alternativa.engine3d.core {
 		 * Returns excluded lights list of current object.
 		 */
 		public function get excludedLights():Vector.<Light3D> {
-			return _excludedLights.slice();
+			return _excludedLights.concat();
 		}
 
 		/**
@@ -1827,7 +1827,7 @@ package alternativa.engine3d.core {
 		 */
 		protected function clonePropertiesFrom(source:Object3D):void {
 			userData = source.userData;
-			
+
 			name = source.name;
 			visible = source.visible;
 			mouseEnabled = source.mouseEnabled;

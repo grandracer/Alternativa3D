@@ -3,7 +3,7 @@
  * If it is not possible or desirable to put the notice in a particular file, then You may include the notice in a location (such as a LICENSE file in a relevant directory) where a recipient would be likely to look for such a notice.
  * You may add additional accurate notices of copyright ownership.
  *
- * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/ 
+ * It is desirable to notify that Covered Software was "Powered by AlternativaPlatform" with link to http://www.alternativaplatform.com/
  * */
 
 package alternativa.engine3d.loaders.collada {
@@ -87,7 +87,7 @@ package alternativa.engine3d.loaders.collada {
 
 				// Create geometry
 				this.geometry = new Geometry();
-				this.geometry._indices = source._indices.slice();
+				this.geometry._indices = source._indices.concat();
 				var attributes:Array = source.getVertexStreamAttributes(0);
 				var numSourceAttributes:int = attributes.length;
 
