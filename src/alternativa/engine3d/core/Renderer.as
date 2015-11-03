@@ -16,8 +16,12 @@ package alternativa.engine3d.core {
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.Program3D;
+    import flash.display3D.VertexBuffer3D;
+    import flash.display3D.textures.TextureBase;
 
-	use namespace alternativa3d;
+    import skyboy.utils.fastSort;
+
+    use namespace alternativa3d;
 
 	/**
 	 * @private 
@@ -25,15 +29,11 @@ package alternativa.engine3d.core {
 	public class Renderer {
 
 		public static const SKY:int = 10;
-
 		public static const OPAQUE:int = 20;
-
 		public static const OPAQUE_OVERHEAD:int = 25;
-
 		public static const DECALS:int = 30;
-
 		public static const TRANSPARENT_SORT:int = 40;
-
+        public static const GHOST_OPAQUE:int = 41;
 		public static const NEXT_LAYER:int = 50;
 
 		// Collector
@@ -46,80 +46,77 @@ package alternativa.engine3d.core {
         /**
          * @private
          */
-		alternativa3d var drawUnits:Vector.<DrawUnit> = new Vector.<DrawUnit>();
+//		alternativa3d var drawUnits:Vector.<DrawUnit> = new Vector.<DrawUnit>();
+
+        private var drawUnitGroups:Vector.<Vector.<DrawUnit>> = new Vector.<Vector.<DrawUnit>>();
+        private var drawUnitGroupLength:Vector.<uint> = new Vector.<uint>();
+
+        private var drawUnitPool:Vector.<DrawUnit> = new Vector.<DrawUnit>();
+        private var drawUnitPoolPos:uint = 0;
 
 		protected var _contextProperties:RendererContext3DProperties;
 
-        /**
-         * @private
-         * @param context3D
-         */
-		alternativa3d function render(context3D:Context3D):void {
+		alternativa3d function render(context3D:Context3D):void
+        {
 			updateContext3D(context3D);
 
-			var drawUnitsLength:int = drawUnits.length;
-			for (var i:int = 0; i < drawUnitsLength; i++) {
-				var list:DrawUnit = drawUnits[i];
-				if (list != null) {
+			for (var i:int = 0, len:int = drawUnitGroups.length; i < len; i++)
+            {
+                var group:Vector.<DrawUnit> = drawUnitGroups[i];
+                var groupSize:uint = drawUnitGroupLength[i];
+				if (groupSize > 0)
+                {
 					switch (i) {
 						case SKY:
 							context3D.setDepthTest(false, Context3DCompareMode.ALWAYS);
 							break;
 						case OPAQUE:
 							context3D.setDepthTest(true, Context3DCompareMode.LESS);
+                            fastSort(group, 'averageZ', Array.NUMERIC, groupSize);
 							break;
 						case OPAQUE_OVERHEAD:
 							context3D.setDepthTest(false, Context3DCompareMode.EQUAL);
 							break;
+                        case GHOST_OPAQUE:
+                            context3D.setDepthTest(false, Context3DCompareMode.LESS_EQUAL);
+                            break;
 						case DECALS:
 							context3D.setDepthTest(false, Context3DCompareMode.LESS_EQUAL);
 							break;
 						case TRANSPARENT_SORT:
-							if (list.next != null) list = sortByAverageZ(list);
+                            fastSort(group, 'averageZ', Array.NUMERIC | Array.DESCENDING, groupSize);
 							context3D.setDepthTest(false, Context3DCompareMode.LESS);
 							break;
 						case NEXT_LAYER:
 							context3D.setDepthTest(false, Context3DCompareMode.ALWAYS);
 							break;
 					}
-					// Rendering
-					while (list != null) {
-						var next:DrawUnit = list.next;
-						renderDrawUnit(list, context3D, camera);
-						// Send to collector
-						list.clear();
-						list.next = collector;
-						collector = list;
-						list = next;
-					}
+
+                    for (var j:uint = 0; j < groupSize; j++)
+                    {
+                        var drawUnit:DrawUnit = group[j];
+                        renderDrawUnit(group[j], context3D, camera);
+                        drawUnit.clear();
+                    }
 				}
+                drawUnitGroupLength[i] = 0;
 			}
-			// TODO: not free buffers and textures in each renderer, only when full camera cycle finishes.
+            drawUnitPoolPos = 0;
 			freeContext3DProperties(context3D);
-			// Clear
-			drawUnits.length = 0;
 		}
 
-        /**
-         * @private
-         * @param object
-         * @param program
-         * @param indexBuffer
-         * @param firstIndex
-         * @param numTriangles
-         * @param debugShader
-         * @return
-         */
 		alternativa3d function createDrawUnit(object:Object3D, program:Program3D, indexBuffer:IndexBuffer3D, firstIndex:int, numTriangles:int, debugShader:ShaderProgram = null):DrawUnit {
-			var res:DrawUnit;
-			if (collector != null) {
-				res = collector;
-				collector = collector.next;
-				res.next = null;
-			} else {
-				//trace("new DrawUnit");
-				res = new DrawUnit();
-			}
+            if (drawUnitPoolPos == drawUnitPool.length)
+            {
+                drawUnitPool.length = Math.max(drawUnitPool.length + 100, drawUnitPool.length * 1.5);
+                for (var i:uint = drawUnitPoolPos; i < drawUnitPool.length; i++)
+                    drawUnitPool[i] = new DrawUnit();
+            }
+
+			var res:DrawUnit = drawUnitPool[drawUnitPoolPos];
+            res.clear();
+            drawUnitPoolPos++;
+
 			res.object = object;
 			res.program = program;
 			res.indexBuffer = indexBuffer;
@@ -128,173 +125,150 @@ package alternativa.engine3d.core {
 			return res;
 		}
 
-        /**
-         * @private
-         * @param drawUnit
-         * @param renderPriority
-         */
-
-		alternativa3d function addDrawUnit(drawUnit:DrawUnit, renderPriority:int):void {
-			// Increase array of priorities, if it is necessary
-			if (renderPriority >= drawUnits.length) drawUnits.length = renderPriority + 1;
-			// Add
-			drawUnit.next = drawUnits[renderPriority];
-			drawUnits[renderPriority] = drawUnit;
+		alternativa3d function addDrawUnit(drawUnit:DrawUnit, renderPriority:int):void
+        {
+            var groupCount:uint = drawUnitGroups.length;
+			if (renderPriority >= groupCount)
+            {
+                drawUnitGroupLength.length = renderPriority + 1;
+                drawUnitGroups.length = renderPriority + 1;
+                for (var i:uint = groupCount; i < drawUnitGroups.length; i++)
+                    drawUnitGroups[i] = new Vector.<DrawUnit>();
+            }
+            var group:Vector.<DrawUnit> = drawUnitGroups[renderPriority];
+            var groupLength:uint = drawUnitGroupLength[renderPriority];
+            if (groupLength == group.length) group.length = Math.max(group.length + 100, group.length * 2);
+            group[groupLength] = drawUnit;
+            drawUnitGroupLength[renderPriority]++;
+            drawUnit.averageZ = drawUnit.object.localToCameraTransform.l;
 		}
 
 		protected function renderDrawUnit(drawUnit:DrawUnit, context:Context3D, camera:Camera3D):void {
-			if (_contextProperties.blendSource != drawUnit.blendSource || _contextProperties.blendDestination != drawUnit.blendDestination) {
+			if (_contextProperties.blendSource != drawUnit.blendSource || _contextProperties.blendDestination != drawUnit.blendDestination)
+            {
 				context.setBlendFactors(drawUnit.blendSource, drawUnit.blendDestination);
 				_contextProperties.blendSource = drawUnit.blendSource;
 				_contextProperties.blendDestination = drawUnit.blendDestination;
 			}
-			if (_contextProperties.culling != drawUnit.culling) {
+
+			if (_contextProperties.culling != drawUnit.culling)
+            {
 				context.setCulling(drawUnit.culling);
 				_contextProperties.culling = drawUnit.culling;
 			}
 
-			var bufferIndex:int;
-			var bufferBit:int;
-			var currentBuffers:int;
-			var textureSampler:int;
-			var textureBit:int;
-			var currentTextures:int;
-			for (var i:int = 0; i < drawUnit.vertexBuffersLength; i++) {
-				bufferIndex = drawUnit.vertexBuffersIndexes[i];
-				bufferBit = 1 << bufferIndex;
-				currentBuffers |= bufferBit;
-				context.setVertexBufferAt(bufferIndex, drawUnit.vertexBuffers[i], drawUnit.vertexBuffersOffsets[i], drawUnit.vertexBuffersFormats[i]);
+            var contextBuffer:Vector.<VertexBuffer3D> = _contextProperties.vertexBuffers;
+            var contextBufferOffset:Vector.<int> = _contextProperties.vertexBuffersOffsets;
+            var contextBufferFormat:Vector.<String> = _contextProperties.vertexBuffersFormats;
+
+            var usedBuffers:uint = 0;
+			for (var i:int = 0; i < drawUnit.vertexBuffersLength; i++)
+            {
+				var bufferIndex:int = drawUnit.vertexBuffersIndexes[i];
+                var buffer:VertexBuffer3D = drawUnit.vertexBuffers[i];
+                var bufferOffset:int = drawUnit.vertexBuffersOffsets[i];
+                var bufferFormat:String = drawUnit.vertexBuffersFormats[i];
+
+                if (contextBuffer.length <= bufferIndex)
+                {
+                    contextBuffer.length = bufferIndex + 1;
+                    contextBufferOffset.length = bufferIndex + 1;
+                    contextBufferFormat.length = bufferIndex + 1;
+                }
+
+                usedBuffers |= 1 << bufferIndex;
+                if (buffer != contextBuffer[bufferIndex] || bufferOffset != contextBufferOffset[bufferIndex] || bufferFormat != contextBufferFormat[bufferIndex])
+                {
+                    contextBuffer[bufferIndex] = buffer;
+                    contextBufferOffset[bufferIndex] = bufferOffset;
+                    contextBufferFormat[bufferIndex] = bufferFormat;
+//                    trace('context.setVertexBufferAt', bufferIndex, buffer, bufferOffset, bufferFormat);
+				    context.setVertexBufferAt(bufferIndex, buffer, bufferOffset, bufferFormat);
+                }
 			}
-			if (drawUnit.vertexConstantsRegistersCount > 0) {
-				context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, drawUnit.vertexConstants, drawUnit.vertexConstantsRegistersCount);
+
+            for (var i:int = 0; i < contextBuffer.length; i++, usedBuffers >>= 1)
+            {
+                if (!(usedBuffers & 1))
+                {
+//                    trace('context.setVertexBufferAt', i, 'null');
+                    context.setVertexBufferAt(i, null);
+                    contextBuffer[i] = null;
+                }
+            }
+
+            if (drawUnit.vertexConstantsRegistersCount > 0) context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, drawUnit.vertexConstants, drawUnit.vertexConstantsRegistersCount);
+			if (drawUnit.fragmentConstantsRegistersCount > 0) context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, drawUnit.fragmentConstants, drawUnit.fragmentConstantsRegistersCount);
+
+            var usedSamplers:uint = 0;
+            var samplers:Vector.<TextureBase> = _contextProperties.samplers;
+			for (i = 0; i < drawUnit.texturesLength; i++)
+            {
+                var texture:TextureBase = drawUnit.textures[i];
+                var samplerIndex:int = drawUnit.texturesSamplers[i];
+                usedSamplers |= 1 << samplerIndex;
+                if (samplers.length <= samplerIndex) samplers.length = samplerIndex + 1;
+                if (samplers[samplerIndex] != texture)
+                {
+                    samplers[samplerIndex] = texture;
+//                    trace('context.setTextureAt', samplerIndex, texture);
+				    context.setTextureAt(samplerIndex, texture);
+                }
 			}
-			if (drawUnit.fragmentConstantsRegistersCount > 0) {
-				context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, drawUnit.fragmentConstants, drawUnit.fragmentConstantsRegistersCount);
-			}
-			for (i = 0; i < drawUnit.texturesLength; i++) {
-				textureSampler = drawUnit.texturesSamplers[i];
-				textureBit = 1 << textureSampler;
-				currentTextures |= textureBit;
-				context.setTextureAt(textureSampler, drawUnit.textures[i]);
-			}
-			if (_contextProperties.program != drawUnit.program) {
+
+            for (var i:int = 0; i < samplers.length; i++, usedSamplers >>= 1)
+            {
+                if (!(usedSamplers & 1))
+                {
+//                    trace('context.setTextureAt', i, null);
+                    context.setTextureAt(i, null);
+                    samplers[i] = null;
+                }
+            }
+
+			if (_contextProperties.program != drawUnit.program)
+            {
 				context.setProgram(drawUnit.program);
 				_contextProperties.program = drawUnit.program;
 			}
-			var _usedBuffers:uint = _contextProperties.usedBuffers & ~currentBuffers;
-			var _usedTextures:uint = _contextProperties.usedTextures & ~currentTextures;
-			for (bufferIndex = 0; _usedBuffers > 0; bufferIndex++) {
-				bufferBit = _usedBuffers & 1;
-				_usedBuffers >>= 1;
-				if (bufferBit) context.setVertexBufferAt(bufferIndex, null);
-			}
-			for (textureSampler = 0; _usedTextures > 0; textureSampler++) {
-				textureBit = _usedTextures & 1;
-				_usedTextures >>= 1;
-				if (textureBit) context.setTextureAt(textureSampler, null);
-			}
+
+//            trace('context.drawTriangles', drawUnit.object.name, drawUnit.indexBuffer, drawUnit.firstIndex, drawUnit.numTriangles);
 			context.drawTriangles(drawUnit.indexBuffer, drawUnit.firstIndex, drawUnit.numTriangles);
-			_contextProperties.usedBuffers = currentBuffers;
-			_contextProperties.usedTextures = currentTextures;
 			camera.numDraws++;
 			camera.numTriangles += drawUnit.numTriangles;
 		}
 
-		protected function updateContext3D(value:Context3D):void {
+		protected function updateContext3D(value:Context3D):void
+        {
 			_contextProperties = camera.context3DProperties;
 		}
 
-		/**
-		 * @private
-		 */
-		alternativa3d function freeContext3DProperties(context3D:Context3D):void {
+		alternativa3d function freeContext3DProperties(context3D:Context3D):void
+        {
 			_contextProperties.culling = null;
 			_contextProperties.blendSource = null;
 			_contextProperties.blendDestination = null;
 			_contextProperties.program = null;
 
-			var usedBuffers:uint = _contextProperties.usedBuffers;
-			var usedTextures:uint = _contextProperties.usedTextures;
+            var samplers:Vector.<TextureBase> = _contextProperties.samplers;
+            for (var i:int = 0; i < samplers.length; i++)
+            {
+                if (samplers[i] != null)
+                {
+                    samplers[i] = null;
+                    context3D.setTextureAt(i, null);
+                }
+            }
 
-			var bufferIndex:int;
-			var bufferBit:int;
-			var textureSampler:int;
-			var textureBit:int;
-			for (bufferIndex = 0; usedBuffers > 0; bufferIndex++) {
-				bufferBit = usedBuffers & 1;
-				usedBuffers >>= 1;
-				if (bufferBit) context3D.setVertexBufferAt(bufferIndex, null);
-			}
-			for (textureSampler = 0; usedTextures > 0; textureSampler++) {
-				textureBit = usedTextures & 1;
-				usedTextures >>= 1;
-				if (textureBit) context3D.setTextureAt(textureSampler, null);
-			}
-			_contextProperties.usedBuffers = 0;
-			_contextProperties.usedTextures = 0;
-		}
-
-        /**
-         * @private
-         * @param list
-         * @param direction
-         * @return
-         */
-		alternativa3d function sortByAverageZ(list:DrawUnit, direction:Boolean = true):DrawUnit {
-			var left:DrawUnit = list;
-			var right:DrawUnit = list.next;
-			while (right != null && right.next != null) {
-				list = list.next;
-				right = right.next.next;
-			}
-			right = list.next;
-			list.next = null;
-			if (left.next != null) {
-				left = sortByAverageZ(left, direction);
-			}
-			if (right.next != null) {
-				right = sortByAverageZ(right, direction);
-			}
-			var flag:Boolean = direction ? (left.object.localToCameraTransform.l > right.object.localToCameraTransform.l) : (left.object.localToCameraTransform.l < right.object.localToCameraTransform.l);
-			if (flag) {
-				list = left;
-				left = left.next;
-			} else {
-				list = right;
-				right = right.next;
-			}
-			var last:DrawUnit = list;
-			while (true) {
-				if (left == null) {
-					last.next = right;
-					return list;
-				} else if (right == null) {
-					last.next = left;
-					return list;
-				}
-				if (flag) {
-					if (direction ? (left.object.localToCameraTransform.l > right.object.localToCameraTransform.l) : (left.object.localToCameraTransform.l < right.object.localToCameraTransform.l)) {
-						last = left;
-						left = left.next;
-					} else {
-						last.next = right;
-						last = right;
-						right = right.next;
-						flag = false;
-					}
-				} else {
-					if (direction ? (left.object.localToCameraTransform.l < right.object.localToCameraTransform.l) : (left.object.localToCameraTransform.l > right.object.localToCameraTransform.l)) {
-						last = right;
-						right = right.next;
-					} else {
-						last.next = left;
-						last = left;
-						left = left.next;
-						flag = true;
-					}
-				}
-			}
-			return null;
+            var buffers:Vector.<VertexBuffer3D> = _contextProperties.vertexBuffers;
+            for (var i:int = 0; i < buffers.length; i++)
+            {
+                if (buffers[i] != null)
+                {
+                    buffers[i] = null;
+                    context3D.setVertexBufferAt(i, null);
+                }
+            }
 		}
 	}
 }

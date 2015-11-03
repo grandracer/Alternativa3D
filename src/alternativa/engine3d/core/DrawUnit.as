@@ -23,9 +23,6 @@ package alternativa.engine3d.core {
 	 * @private 
 	 */
 	public class DrawUnit {
-		
-		alternativa3d var next:DrawUnit;
-		
 		// Required parameters
 		alternativa3d var object:Object3D;
 		alternativa3d var program:Program3D;
@@ -55,6 +52,8 @@ package alternativa.engine3d.core {
 		alternativa3d var vertexConstantsRegistersCount:int = 0;
 		alternativa3d var fragmentConstants:Vector.<Number> = new Vector.<Number>(28*4, true);
 		alternativa3d var fragmentConstantsRegistersCount:int = 0;
+
+        public var averageZ:Number;
 
 		public function DrawUnit() {
 		}

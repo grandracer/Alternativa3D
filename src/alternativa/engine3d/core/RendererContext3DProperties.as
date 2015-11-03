@@ -12,7 +12,9 @@ package alternativa.engine3d.core {
 	import alternativa.engine3d.resources.Geometry;
 
 	import flash.display3D.Program3D;
-	import flash.utils.Dictionary;
+    import flash.display3D.VertexBuffer3D;
+    import flash.display3D.textures.TextureBase;
+    import flash.utils.Dictionary;
 
 	/**
 	 * @private
@@ -26,9 +28,6 @@ package alternativa.engine3d.core {
 		public var backBufferHeight:int = -1;
 		public var backBufferAntiAlias:int = -1;
 
-		public var usedBuffers:uint = 0;
-		public var usedTextures:uint = 0;
-
 		public var program:Program3D;
 		public var culling:String;
 		public var blendSource:String;
@@ -40,5 +39,9 @@ package alternativa.engine3d.core {
 		public var drawColoredRectProgram:ShaderProgram;
 		public var drawRectGeometry:Geometry;
 
+        public var vertexBuffers:Vector.<VertexBuffer3D> = new Vector.<VertexBuffer3D>();
+        public var vertexBuffersOffsets:Vector.<int> = new Vector.<int>();
+        public var vertexBuffersFormats:Vector.<String> = new Vector.<String>();
+        public var samplers:Vector.<TextureBase> = new Vector.<TextureBase>();
 	}
 }
