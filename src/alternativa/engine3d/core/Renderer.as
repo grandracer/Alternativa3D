@@ -18,6 +18,7 @@ package alternativa.engine3d.core {
 	import flash.display3D.Program3D;
     import flash.display3D.VertexBuffer3D;
     import flash.display3D.textures.TextureBase;
+    import flash.utils.getTimer;
 
     import skyboy.utils.fastSort;
 
@@ -56,17 +57,31 @@ package alternativa.engine3d.core {
 
 		protected var _contextProperties:RendererContext3DProperties;
 
+        CONFIG::DEBUG
+        {
+            private var lastOutputTime:int = 0;
+        }
+
 		alternativa3d function render(context3D:Context3D):void
         {
 			updateContext3D(context3D);
 
+            CONFIG::DEBUG
+            {
+                var now:int = getTimer();
+                var printDebugInfo:Boolean = now - lastOutputTime >= 1000;
+                if (printDebugInfo) lastOutputTime = now;
+            }
+
+            var drawUnitCount:int = 0, secondPass:int = 0;
 			for (var i:int = 0, len:int = drawUnitGroups.length; i < len; i++)
             {
                 var group:Vector.<DrawUnit> = drawUnitGroups[i];
                 var groupSize:uint = drawUnitGroupLength[i];
 				if (groupSize > 0)
                 {
-					switch (i) {
+					switch (i)
+                    {
 						case SKY:
 							context3D.setDepthTest(false, Context3DCompareMode.ALWAYS);
 							break;
@@ -95,12 +110,23 @@ package alternativa.engine3d.core {
                     for (var j:uint = 0; j < groupSize; j++)
                     {
                         var drawUnit:DrawUnit = group[j];
+                        if (drawUnit.passInfo == 1) secondPass++;
                         renderDrawUnit(group[j], context3D, camera);
                         drawUnit.clear();
                     }
+                    drawUnitCount += groupSize;
 				}
                 drawUnitGroupLength[i] = 0;
 			}
+
+            CONFIG::DEBUG
+            {
+                if (printDebugInfo)
+                {
+                    lastOutputTime = now;
+//                    trace('RENDERER', secondPass, '/', drawUnitCount);
+                }
+            }
             drawUnitPoolPos = 0;
 			freeContext3DProperties(context3D);
 		}

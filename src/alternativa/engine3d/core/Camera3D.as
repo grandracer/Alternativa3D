@@ -241,6 +241,7 @@ public class Camera3D extends Object3D {
 				if (context3DProperties == null) {
 					context3DProperties = new RendererContext3DProperties();
 					context3DProperties.isConstrained = currentContext3D.driverInfo.lastIndexOf("(Baseline Constrained)") >= 0;
+                    context3DProperties.profile = currentContext3D.profile;
 					context3DPropertiesPool[currentContext3D] = context3DProperties;
 				}
 				context3D = currentContext3D;

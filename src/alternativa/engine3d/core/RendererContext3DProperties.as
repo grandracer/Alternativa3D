@@ -23,6 +23,7 @@ package alternativa.engine3d.core {
 	public class RendererContext3DProperties {
 
 		public var isConstrained:Boolean = false;
+        public var profile:String = '';
 
 		public var backBufferWidth:int = -1;
 		public var backBufferHeight:int = -1;
