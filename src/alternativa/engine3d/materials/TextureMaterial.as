@@ -289,6 +289,7 @@ import flash.display3D.VertexBuffer3D;
 					program = getProgram(object, optionsPrograms, camera, null, 0);
 					drawUnit = getDrawUnit(program, camera, surface, geometry, null);
 				}
+                drawUnit.passInfo = 1;
 				// Use z-buffer within DrawCall, draws without blending
 				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
 			}
@@ -304,6 +305,7 @@ import flash.display3D.VertexBuffer3D;
 					program = getProgram(object, optionsPrograms, camera, opacityMap, 0);
 					drawUnit = getDrawUnit(program, camera, surface, geometry, opacityMap);
 				}
+                drawUnit.passInfo = 2;
 				// Do not use z-buffer, draws with blending
 				drawUnit.blendSource = Context3DBlendFactor.SOURCE_ALPHA;
 				drawUnit.blendDestination = Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;

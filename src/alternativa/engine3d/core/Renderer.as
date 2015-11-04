@@ -11,7 +11,11 @@ package alternativa.engine3d.core {
 	import alternativa.engine3d.alternativa3d;
 	import alternativa.engine3d.materials.ShaderProgram;
 
-	import flash.display3D.Context3D;
+    import corelib.utils.ArrayUtils;
+
+    import corelib.utils.DebugUtils;
+
+    import flash.display3D.Context3D;
 	import flash.display3D.Context3DCompareMode;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.IndexBuffer3D;
@@ -19,6 +23,8 @@ package alternativa.engine3d.core {
     import flash.display3D.VertexBuffer3D;
     import flash.display3D.textures.TextureBase;
     import flash.utils.getTimer;
+
+    import mx.utils.StringUtil;
 
     import skyboy.utils.fastSort;
 
@@ -37,17 +43,7 @@ package alternativa.engine3d.core {
         public static const GHOST_OPAQUE:int = 41;
 		public static const NEXT_LAYER:int = 50;
 
-		// Collector
-		protected var collector:DrawUnit;
-
-        /**
-         * @private
-         */
 		alternativa3d var camera:Camera3D;
-        /**
-         * @private
-         */
-//		alternativa3d var drawUnits:Vector.<DrawUnit> = new Vector.<DrawUnit>();
 
         private var drawUnitGroups:Vector.<Vector.<DrawUnit>> = new Vector.<Vector.<DrawUnit>>();
         private var drawUnitGroupLength:Vector.<uint> = new Vector.<uint>();
@@ -66,14 +62,14 @@ package alternativa.engine3d.core {
         {
 			updateContext3D(context3D);
 
-            CONFIG::DEBUG
-            {
-                var now:int = getTimer();
-                var printDebugInfo:Boolean = now - lastOutputTime >= 1000;
-                if (printDebugInfo) lastOutputTime = now;
-            }
+//            CONFIG::DEBUG
+//            {
+//                var lines:Vector.<String> = new Vector.<String>();
+//                var now:int = getTimer();
+//                var printDebugInfo:Boolean = now - lastOutputTime >= 3000;
+//                if (printDebugInfo) lastOutputTime = now;
+//            }
 
-            var drawUnitCount:int = 0, secondPass:int = 0;
 			for (var i:int = 0, len:int = drawUnitGroups.length; i < len; i++)
             {
                 var group:Vector.<DrawUnit> = drawUnitGroups[i];
@@ -110,23 +106,31 @@ package alternativa.engine3d.core {
                     for (var j:uint = 0; j < groupSize; j++)
                     {
                         var drawUnit:DrawUnit = group[j];
-                        if (drawUnit.passInfo == 1) secondPass++;
                         renderDrawUnit(group[j], context3D, camera);
+
+//                        CONFIG::DEBUG
+//                        {
+//                            var id:String = drawUnit.object.userData['id'];
+//                            if (id == null) id = drawUnit.object.name;
+//                            if (id == null) id = '';
+//                            if (printDebugInfo)
+//                                lines.push(id + StringUtil.repeat(' ', 30 - id.length) + ' ' + drawUnit.numTriangles.toString() + ' ' + DebugUtils.formatMemoryAddress(DebugUtils.getMemoryAddress(drawUnit.program)) + ' ' + i.toString() + ' ' + drawUnit.passInfo.toString() + ' ' + drawUnit.averageZ.toString());
+//                        }
                         drawUnit.clear();
                     }
-                    drawUnitCount += groupSize;
 				}
                 drawUnitGroupLength[i] = 0;
 			}
 
-            CONFIG::DEBUG
-            {
-                if (printDebugInfo)
-                {
-                    lastOutputTime = now;
-//                    trace('RENDERER', secondPass, '/', drawUnitCount);
-                }
-            }
+//            CONFIG::DEBUG
+//            {
+//                if (printDebugInfo)
+//                {
+//                    ArrayUtils.sortVectorOfStringsInPlace(lines);
+//                    trace(lines.join('\n') + '\n\n\n\nzzz\n');
+//                    lastOutputTime = now;
+//                }
+//            }
             drawUnitPoolPos = 0;
 			freeContext3DProperties(context3D);
 		}
