@@ -40,7 +40,7 @@ package alternativa.engine3d.core {
 		public static const OPAQUE_OVERHEAD:int = 25;
 		public static const DECALS:int = 30;
 		public static const TRANSPARENT_SORTED:int = 40;
-        public static const TRANSPARENT_UNSORTED:int = 45;
+        public static const TRANSPARENT_UNSORTED:int = 35;
         public static const GHOST_OPAQUE:int = 47;
 		public static const NEXT_LAYER:int = 50;
 
