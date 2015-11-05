@@ -858,7 +858,7 @@ package alternativa.engine3d.materials {
 				}
 				if (drawUnit == null) return;
 				// Use z-buffer within DrawCall, draws without blending
-				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
+				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : opaqueRenderPriority);
 			}
 			// Transparent pass
 			if (transparentPass && alphaThreshold > 0 && alpha > 0) {
@@ -876,7 +876,7 @@ package alternativa.engine3d.materials {
 				// Do not use z-buffer, draws with blending
 				drawUnit.blendSource = Context3DBlendFactor.SOURCE_ALPHA;
 				drawUnit.blendDestination = Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;
-				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.TRANSPARENT_SORT);
+				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : transparentRenderPriority);
 			}
 		}
 

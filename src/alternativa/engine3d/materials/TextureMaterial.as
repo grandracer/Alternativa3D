@@ -48,6 +48,9 @@ import flash.display3D.VertexBuffer3D;
 		private var cachedContext3D:Context3D;
 		private var programsCache:Dictionary;
 
+        public var opaqueRenderPriority:int = Renderer.OPAQUE;
+        public var transparentRenderPriority:int = Renderer.TRANSPARENT_SORTED;
+
 		/**
 		 * @private
 		 * Procedure for diffuse map with alpha channel
@@ -291,7 +294,7 @@ import flash.display3D.VertexBuffer3D;
 				}
                 drawUnit.passInfo = 1;
 				// Use z-buffer within DrawCall, draws without blending
-				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
+				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : opaqueRenderPriority);
 			}
 			// Transparent pass
 			if (transparentPass && alphaThreshold > 0 && alpha > 0) {
@@ -309,7 +312,7 @@ import flash.display3D.VertexBuffer3D;
 				// Do not use z-buffer, draws with blending
 				drawUnit.blendSource = Context3DBlendFactor.SOURCE_ALPHA;
 				drawUnit.blendDestination = Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;
-				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.TRANSPARENT_SORT);
+				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : transparentRenderPriority);
 			}
 		}
 
@@ -333,6 +336,8 @@ import flash.display3D.VertexBuffer3D;
 			opaquePass = tex.opaquePass;
 			transparentPass = tex.transparentPass;
 			alphaThreshold = tex.alphaThreshold;
+            opaqueRenderPriority = tex.opaqueRenderPriority;
+            transparentRenderPriority = tex.transparentRenderPriority;
 			alpha = tex.alpha;
 		}
 

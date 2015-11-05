@@ -39,8 +39,9 @@ package alternativa.engine3d.core {
 		public static const OPAQUE:int = 20;
 		public static const OPAQUE_OVERHEAD:int = 25;
 		public static const DECALS:int = 30;
-		public static const TRANSPARENT_SORT:int = 40;
-        public static const GHOST_OPAQUE:int = 41;
+		public static const TRANSPARENT_SORTED:int = 40;
+        public static const TRANSPARENT_UNSORTED:int = 45;
+        public static const GHOST_OPAQUE:int = 47;
 		public static const NEXT_LAYER:int = 50;
 
 		alternativa3d var camera:Camera3D;
@@ -88,16 +89,19 @@ package alternativa.engine3d.core {
 						case OPAQUE_OVERHEAD:
 							context3D.setDepthTest(false, Context3DCompareMode.EQUAL);
 							break;
-                        case GHOST_OPAQUE:
-                            context3D.setDepthTest(false, Context3DCompareMode.LESS_EQUAL);
-                            break;
 						case DECALS:
 							context3D.setDepthTest(false, Context3DCompareMode.LESS_EQUAL);
 							break;
-						case TRANSPARENT_SORT:
+						case TRANSPARENT_SORTED:
                             fastSort(group, 'averageZ', Array.NUMERIC | Array.DESCENDING, groupSize);
 							context3D.setDepthTest(false, Context3DCompareMode.LESS);
 							break;
+                        case TRANSPARENT_UNSORTED:
+                            context3D.setDepthTest(false, Context3DCompareMode.LESS);
+                            break;
+                        case GHOST_OPAQUE:
+                            context3D.setDepthTest(false, Context3DCompareMode.LESS_EQUAL);
+                            break;
 						case NEXT_LAYER:
 							context3D.setDepthTest(false, Context3DCompareMode.ALWAYS);
 							break;

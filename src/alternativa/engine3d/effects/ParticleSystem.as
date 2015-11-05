@@ -377,7 +377,7 @@ package alternativa.engine3d.effects {
 			drawUnit.blendDestination = blendDestination;
 			drawUnit.culling = Context3DTriangleFace.NONE;
 			// Send to render
-			camera.renderer.addDrawUnit(drawUnit, Renderer.TRANSPARENT_SORT);
+			camera.renderer.addDrawUnit(drawUnit, Renderer.TRANSPARENT_SORTED);
 		}
 		
 		private function drawParticleList(camera:Camera3D, list:Particle):void {

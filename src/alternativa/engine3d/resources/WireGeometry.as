@@ -156,7 +156,7 @@ package alternativa.engine3d.resources {
 					if (color[3] < 1) {
 						drawUnit.blendSource = Context3DBlendFactor.SOURCE_ALPHA;
 						drawUnit.blendDestination = Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;
-						camera.renderer.addDrawUnit(drawUnit, Renderer.TRANSPARENT_SORT);
+						camera.renderer.addDrawUnit(drawUnit, Renderer.TRANSPARENT_SORTED);
 					} else {
 						camera.renderer.addDrawUnit(drawUnit, Renderer.OPAQUE);
 					}

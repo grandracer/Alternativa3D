@@ -981,7 +981,7 @@ import flash.display3D.Context3DVertexBufferFormat;
 				if (isFirstGroup){
 					drawUnit.blendSource = Context3DBlendFactor.ONE;
 					drawUnit.blendDestination = Context3DBlendFactor.ZERO;
-					camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.OPAQUE);
+					camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : opaqueRenderPriority);
 				}
 				else{
 					drawUnit.blendSource = Context3DBlendFactor.ONE;
@@ -999,7 +999,7 @@ import flash.display3D.Context3DVertexBufferFormat;
 					drawUnit.blendSource = Context3DBlendFactor.SOURCE_ALPHA;
 					drawUnit.blendDestination = Context3DBlendFactor.ONE;
 				}
-				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : Renderer.TRANSPARENT_SORT);
+				camera.renderer.addDrawUnit(drawUnit, objectRenderPriority >= 0 ? objectRenderPriority : transparentRenderPriority);
 			}
 
 //			if (fogMode == SIMPLE || fogMode == ADVANCED) {
