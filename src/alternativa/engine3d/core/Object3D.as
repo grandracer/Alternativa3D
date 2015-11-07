@@ -525,133 +525,6 @@ package alternativa.engine3d.core {
 			return current;
 		}
 
-		/**
-		 * Returns index of given child  <code>Object3D</code> instance.
-		 * @param child Child  <code>Object3D</code> instance.
-		 * @return Index of given child  <code>Object3D</code> instance.
-		 */
-		public function getChildIndex(child:Object3D):int {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
-			// Search for index
-			var index:int = 0;
-			for (var current:Object3D = childrenList; current != null; current = current.next) {
-				if (current == child) return index;
-				index++;
-			}
-			throw new ArgumentError("Cannot get child index.");
-		}
-
-		/**
-		 * Sets index for child  <code>Object3D</code> instance.
-		 * @param child Child  <code>Object3D</code> instance.
-		 * @param index Index should be set.
-		 */
-		public function setChildIndex(child:Object3D, index:int):void {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
-			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
-			// Search for element by index
-			var current:Object3D = childrenList;
-			for (var i:int = 0; i < index; i++) {
-				if (current == null) throw new RangeError("The supplied index is out of bounds.");
-				current = current.next;
-			}
-			// Removing
-			child = removeFromList(child);
-			if (child == null) throw new ArgumentError("Cannot set child index.");
-			// Adding
-			addToList(child, current);
-		}
-
-		/**
-		 * Swaps index positions of two specified child objects.
-		 * @param child1 The first object to swap.
-		 * @param child2 The second object to swap.
-		 */
-		public function swapChildren(child1:Object3D, child2:Object3D):void {
-			// Error checking
-			if (child1 == null || child2 == null) throw new TypeError("Parameter child must be non-null.");
-			if (child1.parent != this || child2.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
-			// Swapping
-			if (child1 != child2) {
-				if (child1.next == child2) {
-					child2 = removeFromList(child2);
-					if (child2 == null) throw new ArgumentError("Cannot swap children.");
-					addToList(child2, child1);
-				} else if (child2.next == child1) {
-					child1 = removeFromList(child1);
-					if (child1 == null) throw new ArgumentError("Cannot swap children.");
-					addToList(child1, child2);
-				} else {
-					var count:int = 0;
-					for (var child:Object3D = childrenList; child != null; child = child.next) {
-						if (child == child1) count++;
-						if (child == child2) count++;
-						if (count == 2) break;
-					}
-					if (count < 2) throw new ArgumentError("Cannot swap children.");
-					var nxt:Object3D = child1.next;
-					removeFromList(child1);
-					addToList(child1, child2);
-					removeFromList(child2);
-					addToList(child2, nxt);
-				}
-			}
-		}
-
-		/**
-		 * Swaps index positions of two child objects by its index.
-		 * @param index1 Index of the first object to swap.
-		 * @param index2 Index of the second object to swap.
-		 */
-		public function swapChildrenAt(index1:int, index2:int):void {
-			// Error checking
-			if (index1 < 0 || index2 < 0) throw new RangeError("The supplied index is out of bounds.");
-			// Swapping
-			if (index1 != index2) {
-				// Search for element by index
-				var i:int;
-				var child1:Object3D = childrenList;
-				for (i = 0; i < index1; i++) {
-					if (child1 == null) throw new RangeError("The supplied index is out of bounds.");
-					child1 = child1.next;
-				}
-				if (child1 == null) throw new RangeError("The supplied index is out of bounds.");
-				var child2:Object3D = childrenList;
-				for (i = 0; i < index2; i++) {
-					if (child2 == null) throw new RangeError("The supplied index is out of bounds.");
-					child2 = child2.next;
-				}
-				if (child2 == null) throw new RangeError("The supplied index is out of bounds.");
-				if (child1 != child2) {
-					if (child1.next == child2) {
-						removeFromList(child2);
-						addToList(child2, child1);
-					} else if (child2.next == child1) {
-						removeFromList(child1);
-						addToList(child1, child2);
-					} else {
-						var nxt:Object3D = child1.next;
-						removeFromList(child1);
-						addToList(child1, child2);
-						removeFromList(child2);
-						addToList(child2, nxt);
-					}
-				}
-			}
-		}
-
-		/**
-		 * Returns child <code>Object3D</code> instance with given <code>name</code>.
-		 * In case of there are several objects with same name, the first of them will returned.
-		 * If there are no objects with given name, <code>null</code> will returned.
-		 *
-		 * @param name The name of child object.
-		 * @return Child Object3D with given name.
-		 */
 		public function getChildByName(name:String):Object3D {
 			// Error checking
 			if (name == null) throw new TypeError("Parameter name must be non-null.");
@@ -662,11 +535,6 @@ package alternativa.engine3d.core {
 			return null;
 		}
 
-		/**
-		 * Check if given object is child of this <code>Object3D</code>.
-		 * @param child Child <code>Object3D</code> instance.
-		 * @return <code>true</code> if given instance is this  <code>Object3D</code> or one of its children or <code>false</code> otherwise.
-		 */
 		public function contains(child:Object3D):Boolean {
 			// Error checking
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
@@ -796,20 +664,16 @@ package alternativa.engine3d.core {
 		alternativa3d function calculateVisibility(camera:Camera3D):void {
 		}
 
-		alternativa3d function calculateChildrenVisibility(camera:Camera3D):void {
+		alternativa3d function calculateChildrenVisibility(camera:Camera3D):void
+        {
 			for (var child:Object3D = childrenList; child != null; child = child.next)
             {
-				// Checking visibility flag
 				if (child.visible)
                 {
-					// Compose matrix and inverse matrix
 					if (child.transformChanged) child.composeTransforms();
-					// Calculating matrix for converting from camera coordinates to local coordinates
 					child.cameraToLocalTransform.combine(child.inverseTransform, cameraToLocalTransform);
-					// Calculating matrix for converting from local coordinates to  camera coordinates
 					child.localToCameraTransform.combine(localToCameraTransform, child.transform);
 
-					// Culling checking
 					if (child.boundBox != null)
                     {
 						camera.calculateFrustum(child.cameraToLocalTransform);
@@ -819,77 +683,75 @@ package alternativa.engine3d.core {
                     {
 						child.culling = 63;
 					}
-					// Calculating visibility of the self content
 					if (child.culling >= 0) child.calculateVisibility(camera);
-					// Calculating visibility of children
 					if (child.childrenList != null) child.calculateChildrenVisibility(camera);
 				}
 			}
 		}
 
-		alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
+		alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void
+        {
             meshMergerLastRenderCallId = camera.renderCallId;
 		}
 
-		alternativa3d function collectChildrenDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
-			var i:int;
-			var light:Light3D;
+        alternativa3d function collectChildrenDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void
+        {
+            var i:int;
+            var light:Light3D;
 
-			for (var child:Object3D = childrenList; child != null; child = child.next)
+            for (var child:Object3D = childrenList; child != null; child = child.next)
             {
-				// Checking visibility flag
-				if (child.visible)
+                if (child.visible)
                 {
-					// Check getting in frustum and occluding
-					if (child.culling >= 0)
+                    if (child.culling >= 0)
                     {
-						// Check if object needs in lightning
-						var excludedLightLength:int = child._excludedLights.length;
-						if (lightsLength > 0 && child.useLights) {
-							// Pass the lights to children and calculate appropriate transformations
-							var childLightsLength:int = 0;
-							var j:int;
-							if (child.boundBox != null) {
-								for (i = 0; i < lightsLength; i++) {
-									light = lights[i];
-									// Checking object for existing in excludedLights
-									j = 0;
-									while (j<excludedLightLength && child._excludedLights[j]!=light)	j++;
-									if (j<excludedLightLength) continue;
+                        var excludedLightLength:int = child._excludedLights.length;
+                        if (lightsLength > 0 && child.useLights)
+                        {
+                            var childLightsLength:int = 0;
+                            var j:int;
+                            if (child.boundBox != null)
+                            {
+                                for (i = 0; i < lightsLength; i++)
+                                {
+                                    light = lights[i];
+                                    j = 0;
+                                    while (j < excludedLightLength && child._excludedLights[j] != light) j++;
+                                    if (j < excludedLightLength) continue;
 
-									light.lightToObjectTransform.combine(child.cameraToLocalTransform, light.localToCameraTransform);
-									// Detect influence
-									if (light.boundBox == null || light.checkBound(child)) {
-										camera.childLights[childLightsLength] = light;
-										childLightsLength++;
-									}
-								}
-							} else {
-								// Calculate transformation from light space to object space
-								for (i = 0; i < lightsLength; i++) {
-									light = lights[i];
-									// Проверка источника света на отсутствие в excludedLights
-									j = 0;
-									while (j<excludedLightLength && child._excludedLights[j]!=light)	j++;
-									if (j<excludedLightLength) continue;
-									light.lightToObjectTransform.combine(child.cameraToLocalTransform, light.localToCameraTransform);
-									camera.childLights[childLightsLength] = light;
-									childLightsLength++;
-								}
-							}
+                                    light.lightToObjectTransform.combine(child.cameraToLocalTransform, light.localToCameraTransform);
+                                    if (light.boundBox == null || light.checkBound(child))
+                                    {
+                                        camera.childLights[childLightsLength] = light;
+                                        childLightsLength++;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                for (i = 0; i < lightsLength; i++)
+                                {
+                                    light = lights[i];
+                                    j = 0;
+                                    while (j < excludedLightLength && child._excludedLights[j] != light) j++;
+                                    if (j < excludedLightLength) continue;
+                                    light.lightToObjectTransform.combine(child.cameraToLocalTransform, light.localToCameraTransform);
+                                    camera.childLights[childLightsLength] = light;
+                                    childLightsLength++;
+                                }
+                            }
                             sortLights(camera.childLights, childLightsLength);
-							child.collectDraws(camera, camera.childLights, childLightsLength, useShadow&&child.useShadow);
-						} else {
-							child.collectDraws(camera, null, 0, useShadow&&child.useShadow);
-						}
-						// Debug the boundbox
-						if (camera.debug && child.boundBox != null && (camera.checkInDebug(child) & Debug.BOUNDS)) Debug.drawBoundBox(camera, child.boundBox, child.localToCameraTransform);
-					}
-					// Gather the draws for children
-					if (child.childrenList != null) child.collectChildrenDraws(camera, lights, lightsLength, useShadow && child.useShadow);
-				}
-			}
-		}
+                            child.collectDraws(camera, camera.childLights, childLightsLength, useShadow && child.useShadow);
+                        }
+                        else
+                        {
+                            child.collectDraws(camera, null, 0, useShadow && child.useShadow);
+                        }
+                    }
+                    if (child.childrenList != null) child.collectChildrenDraws(camera, lights, lightsLength, useShadow && child.useShadow);
+                }
+            }
+        }
 
         private static const LIGHT_TYPE_COUNT:int = 5;
 
