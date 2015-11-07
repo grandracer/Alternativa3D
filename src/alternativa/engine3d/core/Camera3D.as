@@ -154,11 +154,6 @@ public class Camera3D extends Object3D {
 
 	/**
 	 * @private
-	 */
-	alternativa3d var globalMouseHandlingType:uint;
-
-	/**
-	 * @private
 	 * <code>Context3D</code> which is used for rendering.
 	 */
 	alternativa3d var context3D:Context3D;
@@ -267,7 +262,6 @@ public class Camera3D extends Object3D {
 				// Calculating the matrix to transform from local space to the camera space
 				root.localToCameraTransform.combine(globalToLocalTransform, root.transform);
 
-				globalMouseHandlingType = root.mouseHandlingType;
 				// Checking the culling
 				if (root.boundBox != null) {
                     calculateFrustum(root.cameraToLocalTransform);
@@ -305,12 +299,6 @@ public class Camera3D extends Object3D {
 				// Sort lights by types
 				sortLights(lights, lightsLength);
 
-				// Calculating the rays of mouse events
-				view.calculateRays(this, (globalMouseHandlingType & Object3D.MOUSE_HANDLING_MOVING) != 0,
-										 (globalMouseHandlingType & Object3D.MOUSE_HANDLING_PRESSING) != 0,
-										 (globalMouseHandlingType & Object3D.MOUSE_HANDLING_WHEEL) != 0,
-										 (globalMouseHandlingType & Object3D.MOUSE_HANDLING_MIDDLE_BUTTON) != 0,
-										 (globalMouseHandlingType & Object3D.MOUSE_HANDLING_RIGHT_BUTTON) != 0);
 				for (i = origins.length; i < view.raysLength; i++) {
 					origins[i] = new Vector3D();
 					directions[i] = new Vector3D();
@@ -330,14 +318,8 @@ public class Camera3D extends Object3D {
 				}
 
 				// Check getting in frustum and occluding
-				if (root.culling >= 0 && root.boundBox == null) {
-					// Check if the ray crossing the bounding box
-					if (globalMouseHandlingType > 0 && root.boundBox != null) {
-						calculateRays(root.cameraToLocalTransform);
-						root.listening = root.boundBox.checkRays(origins, directions, raysLength);
-					} else {
-						root.listening = globalMouseHandlingType > 0;
-					}
+				if (root.culling >= 0 && root.boundBox == null)
+                {
 					// Check if object needs in lightning
 					var excludedLightLength:int = root._excludedLights.length;
 					if (lightsLength > 0 && root.useLights) {
@@ -381,11 +363,7 @@ public class Camera3D extends Object3D {
 					// Debug the boundbox
 					if (debug && root.boundBox != null && (checkInDebug(root) & Debug.BOUNDS)) Debug.drawBoundBox(this, root.boundBox, root.localToCameraTransform);
 				}
-				// Gather the draws for children
 				root.collectChildrenDraws(this, lights, lightsLength, root.useShadow);
-				// Mouse events prosessing
-				view.processMouseEvents(context3D, this);
-				// Render
 				renderer.render(context3D);
 			}
 			// Output

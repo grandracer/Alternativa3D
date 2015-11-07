@@ -386,7 +386,7 @@ package alternativa.engine3d.loaders {
 					geometryData.indexBufferID,
 					source.name,
 					parents[source.parent],
-					exportSurfaces(source._surfaces, dest),
+					exportSurfaces(source.surfaces, dest),
 					exportTransform(source.transform),
 					geometryData.vertexBufferIDs,
 					source.visible
@@ -406,7 +406,7 @@ package alternativa.engine3d.loaders {
 					source.name,
 					exportNumJoitns(source.surfaceJoints),
 					null,
-					exportSurfaces(source._surfaces, dest),
+					exportSurfaces(source.surfaces, dest),
 					exportTransform(source.transform),
 					geometryData.vertexBufferIDs,
 					source.visible

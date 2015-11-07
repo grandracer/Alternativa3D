@@ -9,12 +9,10 @@
 package alternativa.engine3d.objects {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.DrawUnit;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.core.VertexStream;
 	import alternativa.engine3d.materials.Material;
@@ -110,9 +108,9 @@ package alternativa.engine3d.objects {
 		 * @inheritDoc
 		 */
 		override public function addSurface(material:Material, indexBegin:uint, numTriangles:uint):Surface {
-			surfaceJoints[_surfacesLength] = _renderedJoints;
-			surfaceTransformProcedures[_surfacesLength] = transformProcedure;
-			surfaceDeltaTransformProcedures[_surfacesLength] = deltaTransformProcedure;
+			surfaceJoints[surfacesLength] = _renderedJoints;
+			surfaceTransformProcedures[surfacesLength] = transformProcedure;
+			surfaceDeltaTransformProcedures[surfacesLength] = deltaTransformProcedure;
 			return super.addSurface(material, indexBegin, numTriangles);
 		}
 
@@ -345,12 +343,12 @@ package alternativa.engine3d.objects {
 			surfaceJoints.length = 0;
 			var jointsBufferNumMappings:int = geometry._vertexStreams[jointsBuffer].attributes.length;
 			var jointsBufferData:ByteArray = geometry._vertexStreams[jointsBuffer].data;
-			for (var i:int = 0; i < _surfacesLength; i++) {
+			for (var i:int = 0; i < surfacesLength; i++) {
 				var outIndices:Vector.<uint> = new Vector.<uint>();
 				var outVertices:ByteArray = new ByteArray();
 				var outJointsMaps:Vector.<Dictionary> = new Vector.<Dictionary>();
 				outVertices.endian = Endian.LITTLE_ENDIAN;
-				var maxIndex:uint = divideSurface(limit, iterations, _surfaces[i], jointsOffsets,
+				var maxIndex:uint = divideSurface(limit, iterations, surfaces[i], jointsOffsets,
 					jointsBufferNumMappings*4, jointsBufferData, outVertices, outIndices, outSurfaces, outJointsMaps);
 				for (var j:int = 0, count:int = outIndices.length; j < count; j++) {
 					totalIndices[totalIndicesLength++] = lastMaxIndex + outIndices[j];
@@ -376,10 +374,10 @@ package alternativa.engine3d.objects {
 				totalVertices.writeBytes(outVertices, 0, outVertices.length);
 				lastMaxIndex += maxIndex;
 			}
-			_surfaces = outSurfaces;
-			_surfacesLength = outSurfaces.length;
-			surfaceTransformProcedures.length = _surfacesLength;
-			surfaceDeltaTransformProcedures.length = _surfacesLength;
+			surfaces = outSurfaces;
+			surfacesLength = outSurfaces.length;
+			surfaceTransformProcedures.length = surfacesLength;
+			surfaceDeltaTransformProcedures.length = surfacesLength;
 			calculateSurfacesProcedures();
 			var newGeometry:Geometry = new Geometry();
 			newGeometry._indices = totalIndices;
@@ -431,8 +429,8 @@ package alternativa.engine3d.objects {
 			var vertexSurface:Dictionary = new Dictionary();
 			var indices:Vector.<uint> = geometry._indices;
 			// Fill the map vertex-surface
-			for (var i:int = 0; i < _surfacesLength; i++) {
-				var surface:Surface = _surfaces[i];
+			for (var i:int = 0; i < surfacesLength; i++) {
+				var surface:Surface = surfaces[i];
 				for (var j:int = surface.indexBegin, count:int = surface.indexBegin + surface.numTriangles*3; j < count; j++) {
 					vertexSurface[indices[j]] = i;
 				}
@@ -537,7 +535,7 @@ package alternativa.engine3d.objects {
 		 */
 		public function set renderedJoints(value:Vector.<Joint>):void {
 			//If skin is not divided, change number of bonesfor each surface
-			for (var i:int = 0; i < _surfacesLength; i++) {
+			for (var i:int = 0; i < surfacesLength; i++) {
 				if (surfaceJoints[i] == _renderedJoints) {
 					surfaceJoints[i] = value;
 				}
@@ -555,7 +553,7 @@ package alternativa.engine3d.objects {
 			var numJoints:int = _renderedJoints != null ? _renderedJoints.length : 0;
 			transformProcedure = calculateTransformProcedure(maxInfluences, numJoints);
 			deltaTransformProcedure = calculateDeltaTransformProcedure(maxInfluences);
-			for (var i:int = 0; i < _surfacesLength; i++) {
+			for (var i:int = 0; i < surfacesLength; i++) {
 				numJoints = surfaceJoints[i] != null ? surfaceJoints[i].length : 0;
 				surfaceTransformProcedures[i] = calculateTransformProcedure(maxInfluences, numJoints);
 				surfaceDeltaTransformProcedures[i] = calculateDeltaTransformProcedure(maxInfluences);
@@ -578,8 +576,8 @@ package alternativa.engine3d.objects {
 				calculateJointsTransforms(child);
 			}
 
-			for (var i:int = 0; i < _surfacesLength; i++) {
-				var surface:Surface = _surfaces[i];
+			for (var i:int = 0; i < surfacesLength; i++) {
+				var surface:Surface = surfaces[i];
 				transformProcedure = surfaceTransformProcedures[i];
 				deltaTransformProcedure = surfaceDeltaTransformProcedures[i];
 				if (surface.material != null) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow);
@@ -588,8 +586,6 @@ package alternativa.engine3d.objects {
 				if (destination == null) continue;
 				camera.renderer.addDrawUnit(destination);
 				setTransformConstants(destination, surface, destination.program.vertexShader, camera);*/
-				// Mouse events
-				if (listening) camera.view.addSurfaceToMouseEvents(surface, geometry, transformProcedure);
 			}
 		}
 
@@ -602,7 +598,7 @@ package alternativa.engine3d.objects {
 				var attribute:int = VertexAttributes.JOINTS[i >> 1];
 				drawUnit.setVertexBufferAt(vertexShader.getVariableIndex("joint" + i.toString()), geometry.getVertexBuffer(attribute), geometry._attributesOffsets[attribute], VertexAttributes.FORMATS[attribute]);
 			}
-			var surfaceIndex:int = _surfaces.indexOf(surface);
+			var surfaceIndex:int = surfaces.indexOf(surface);
 			var joints:Vector.<Joint> = surfaceJoints[surfaceIndex];
 			for (i = 0,count = joints.length; i < count; i++) {
 				var joint:Joint = joints[i];
@@ -697,7 +693,7 @@ package alternativa.engine3d.objects {
 			}
 			this.transformProcedure = skin.transformProcedure;
 			this.deltaTransformProcedure = skin.deltaTransformProcedure;
-			for (var i:int = 0; i < _surfacesLength; i++) {
+			for (var i:int = 0; i < surfacesLength; i++) {
 				surfaceJoints[i] = cloneJointsVector(skin.surfaceJoints[i], skin);
 				surfaceTransformProcedures[i] = skin.surfaceTransformProcedures[i];
 				surfaceDeltaTransformProcedures[i] = skin.surfaceDeltaTransformProcedures[i];

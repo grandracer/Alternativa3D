@@ -9,14 +9,11 @@
 package alternativa.engine3d.objects {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
     import alternativa.engine3d.core.RayIntersectionContext;
     import alternativa.engine3d.core.RayIntersectionData;
-	import alternativa.engine3d.core.Transform3D;
-	import alternativa.engine3d.core.events.Event3D;
 
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
@@ -61,7 +58,6 @@ package alternativa.engine3d.objects {
 				addToLevelList(level, distance);
 				level.parent = this;
 				// Dispatch of event.
-				if (level.willTrigger(Event3D.ADDED)) level.dispatchEvent(new Event3D(Event3D.ADDED, true));
 			} else {
 				if (removeFromList(level) == null) removeFromLevelList(level);
 				//  Add.
@@ -84,7 +80,6 @@ package alternativa.engine3d.objects {
 			level = removeFromLevelList(level);
 			if (level == null) throw new ArgumentError("Cannot remove level.");
 			// Dispatch of event.
-			if (level.willTrigger(Event3D.REMOVED)) level.dispatchEvent(new Event3D(Event3D.REMOVED, true));
 			level.parent = null;
 			return level;
 		}
@@ -204,7 +199,6 @@ package alternativa.engine3d.objects {
 			// Calculation of transfer matrix from local space to camera.
 			child.localToCameraTransform.combine(parent.localToCameraTransform, child.transform);
 
-			camera.globalMouseHandlingType |= child.mouseHandlingType;
 			// Pass
 			child.culling = parent.culling;
 			// Calculating visibility of the self content
@@ -229,7 +223,6 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		alternativa3d function collectChildDraws(child:Object3D, parent:Object3D, camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
-			child.listening = parent.listening;
 			// If object needs on light sources.
 			if (lightsLength > 0 && child.useLights) {
 				// Calculation of transfer matrices from sources to object.

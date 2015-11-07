@@ -10,7 +10,6 @@ package alternativa.engine3d.core {
 
 	import alternativa.Alternativa3D;
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.materials.ShaderProgram;
 	import alternativa.engine3d.materials.compiler.Linker;
 	import alternativa.engine3d.materials.compiler.Procedure;
@@ -44,7 +43,6 @@ package alternativa.engine3d.core {
 	import flash.ui.ContextMenu;
 	import flash.ui.ContextMenuItem;
 	import flash.ui.Keyboard;
-	import flash.ui.Mouse;
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 
@@ -526,16 +524,6 @@ package alternativa.engine3d.core {
 		/**
 		 * @private
 		 */
-		alternativa3d function addSurfaceToMouseEvents(surface:Surface, geometry:Geometry, procedure:Procedure):void {
-			surfaces[surfacesLength] = surface;
-			geometries[surfacesLength] = geometry;
-			procedures[surfacesLength] = procedure;
-			surfacesLength++;
-		}
-
-		/**
-		 * @private
-		 */
 		alternativa3d function configureContext3D(stage3D:Stage3D, context3D:Context3D, camera:Camera3D):void {
 			if (_canvas == null) {
 				var vis:Boolean = this.visible;
@@ -610,146 +598,6 @@ package alternativa.engine3d.core {
 				context3DProperties.backBufferAntiAlias = antiAlias;
 				context3D.configureBackBuffer(_width, _height, antiAlias);
 			}
-		}
-
-		/**
-		 * @private
-		 */
-		alternativa3d function processMouseEvents(context3D:Context3D, camera:Camera3D):void {
-			var i:int;
-			// Mouse events
-			if (eventsLength > 0) {
-				if (surfacesLength > 0) {
-					// Calculating the depth
-					calculateSurfacesDepths(context3D, camera, _width, _height);
-					// Sorting by decreasing the depth
-					for (i = 0; i < raysLength; i++) {
-						var raySurfaces:Vector.<Surface> = raysSurfaces[i];
-						var rayDepths:Vector.<Number> = raysDepths[i];
-						var raySurfacesLength:int = raySurfaces.length;
-						if (raySurfacesLength > 1) {
-							sort(raySurfaces, rayDepths, raySurfacesLength);
-						}
-					}
-				}
-				// Event handling
-				targetDepth = camera.farClipping;
-				for (i = 0; i < eventsLength; i++) {
-					var mouseEvent:MouseEvent = events[i];
-					var index:int = indices[i];
-					// Check event type
-					switch (mouseEvent.type) {
-						case "mouseDown":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MOUSE_DOWN, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-							}
-							pressedTarget = target;
-							break;
-						case "click":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MOUSE_UP, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								if (pressedTarget == target) {
-									clickedTarget = target;
-									propagateEvent(MouseEvent3D.CLICK, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								}
-							}
-							pressedTarget = null;
-							break;
-						case "doubleClick":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MOUSE_UP, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								if (pressedTarget == target) {
-									propagateEvent(clickedTarget == target && target.doubleClickEnabled ? MouseEvent3D.DOUBLE_CLICK : MouseEvent3D.CLICK, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								}
-							}
-							clickedTarget = null;
-							pressedTarget = null;
-							break;
-						case "middleMouseDown":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MIDDLE_MOUSE_DOWN, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-							}
-							pressedMiddleTarget = target;
-							break;
-						case "middleClick":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MIDDLE_MOUSE_UP, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								if (pressedMiddleTarget == target) {
-									propagateEvent(MouseEvent3D.MIDDLE_CLICK, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								}
-							}
-							pressedMiddleTarget = null;
-							break;
-						case "rightMouseDown":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.RIGHT_MOUSE_DOWN, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-							}
-							pressedRightTarget = target;
-							break;
-						case "rightClick":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.RIGHT_MOUSE_UP, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								if (pressedRightTarget == target) {
-									propagateEvent(MouseEvent3D.RIGHT_CLICK, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-								}
-							}
-							pressedRightTarget = null;
-							break;
-						case "mouseMove":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MOUSE_MOVE, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-							}
-							if (overedTarget != target) {
-								processOverOut(mouseEvent, camera);
-							}
-							break;
-						case "mouseWheel":
-							defineTarget(index);
-							if (target != null) {
-								propagateEvent(MouseEvent3D.MOUSE_WHEEL, mouseEvent, camera, target, targetSurface, branchToVector(target, branch));
-							}
-							break;
-						case "mouseOut":
-							// TODO: lastEvent not need change here. For example when MOUSE_OUT and MOUSE_MOVE exists in the one frame.
-							lastEvent = null;
-							target = null;
-							targetSurface = null;
-							if (overedTarget != target) {
-								processOverOut(mouseEvent, camera);
-							}
-							break;
-						case "render":
-							defineTarget(index);
-							if (overedTarget != target) {
-								processOverOut(mouseEvent, camera);
-							}
-							break;
-					}
-					target = null;
-					targetSurface = null;
-					targetDepth = camera.farClipping;
-				}
-			}
-			// Reset surfaces
-			surfaces.length = 0;
-			surfacesLength = 0;
-			// Reset events
-			events.length = 0;
-			eventsLength = 0;
-			// Reset rays
-			for (i = 0; i < raysLength; i++) {
-				raysSurfaces[i].length = 0;
-				raysDepths[i].length = 0;
-			}
-			raysLength = 0;
 		}
 
 		/**
@@ -985,55 +833,6 @@ package alternativa.engine3d.core {
 			}
 		}
 
-		private function processOverOut(mouseEvent:MouseEvent, camera:Camera3D):void {
-			branchToVector(target, branch);
-			branchToVector(overedTarget, overedBranch);
-			var branchLength:int = branch.length;
-			var overedBranchLength:int = overedBranch.length;
-			var changedBranchLength:int;
-			var i:int;
-			var j:int;
-			var object:Object3D;
-			if (overedTarget != null) {
-				propagateEvent(MouseEvent3D.MOUSE_OUT, mouseEvent, camera, overedTarget, overedTargetSurface, overedBranch, true, target);
-				changedBranchLength = 0;
-				for (i = 0; i < overedBranchLength; i++) {
-					object = overedBranch[i];
-					for (j = 0; j < branchLength; j++) if (object == branch[j]) break;
-					if (j == branchLength) {
-						changedBranch[changedBranchLength] = object;
-						changedBranchLength++;
-					}
-				}
-				if (changedBranchLength > 0) {
-					changedBranch.length = changedBranchLength;
-					propagateEvent(MouseEvent3D.ROLL_OUT, mouseEvent, camera, overedTarget, overedTargetSurface, changedBranch, false, target);
-				}
-			}
-			if (target != null) {
-				changedBranchLength = 0;
-				for (i = 0; i < branchLength; i++) {
-					object = branch[i];
-					for (j = 0; j < overedBranchLength; j++) if (object == overedBranch[j]) break;
-					if (j == overedBranchLength) {
-						changedBranch[changedBranchLength] = object;
-						changedBranchLength++;
-					}
-				}
-				if (changedBranchLength > 0) {
-					changedBranch.length = changedBranchLength;
-					propagateEvent(MouseEvent3D.ROLL_OVER, mouseEvent, camera, target, targetSurface, changedBranch, false, overedTarget);
-				}
-				propagateEvent(MouseEvent3D.MOUSE_OVER, mouseEvent, camera, target, targetSurface, branch, true, overedTarget);
-				useHandCursor = target.useHandCursor;
-			} else {
-				useHandCursor = false;
-			}
-			Mouse.cursor = Mouse.cursor;
-			overedTarget = target;
-			overedTargetSurface = targetSurface;
-		}
-
 		private function branchToVector(object:Object3D, vector:Vector.<Object3D>):Vector.<Object3D> {
 			var len:int = 0;
 			while (object != null) {
@@ -1043,64 +842,6 @@ package alternativa.engine3d.core {
 			}
 			vector.length = len;
 			return vector;
-		}
-
-		private function propagateEvent(type:String, mouseEvent:MouseEvent, camera:Camera3D, target:Object3D, targetSurface:Surface, objects:Vector.<Object3D>, bubbles:Boolean = true, relatedObject:Object3D = null):void {
-			var oblectsLength:int = objects.length;
-			var object:Object3D;
-			var vector:Vector.<Function>;
-			var length:int;
-			var i:int;
-			var j:int;
-			var mouseEvent3D:MouseEvent3D;
-			// Capture
-			for (i = oblectsLength - 1; i > 0; i--) {
-				object = objects[i];
-				if (object.captureListeners != null) {
-					vector = object.captureListeners[type];
-					if (vector != null) {
-						if (mouseEvent3D == null) {
-							calculateLocalCoords(camera, target.cameraToLocalTransform, targetDepth, mouseEvent);
-							mouseEvent3D = new MouseEvent3D(type, bubbles, localCoords.x, localCoords.y, localCoords.z, relatedObject, mouseEvent.ctrlKey, mouseEvent.altKey, mouseEvent.shiftKey, mouseEvent.buttonDown, mouseEvent.delta);
-							mouseEvent3D._target = target;
-							mouseEvent3D._surface = targetSurface;
-						}
-						mouseEvent3D._currentTarget = object;
-						mouseEvent3D._eventPhase = 1;
-						length = vector.length;
-						for (j = 0; j < length; j++) functions[j] = vector[j];
-						for (j = 0; j < length; j++) {
-							(functions[j] as Function).call(null, mouseEvent3D);
-							if (mouseEvent3D.stopImmediate) return;
-						}
-						if (mouseEvent3D.stop) return;
-					}
-				}
-			}
-			// Bubble
-			for (i = 0; i < oblectsLength; i++) {
-				object = objects[i];
-				if (object.bubbleListeners != null) {
-					vector = object.bubbleListeners[type];
-					if (vector != null) {
-						if (mouseEvent3D == null) {
-							calculateLocalCoords(camera, target.cameraToLocalTransform, targetDepth, mouseEvent);
-							mouseEvent3D = new MouseEvent3D(type, bubbles, localCoords.x, localCoords.y, localCoords.z, relatedObject, mouseEvent.ctrlKey, mouseEvent.altKey, mouseEvent.shiftKey, mouseEvent.buttonDown, mouseEvent.delta);
-							mouseEvent3D._target = target;
-							mouseEvent3D._surface = targetSurface;
-						}
-						mouseEvent3D._currentTarget = object;
-						mouseEvent3D._eventPhase = (i == 0) ? 2 : 3;
-						length = vector.length;
-						for (j = 0; j < length; j++) functions[j] = vector[j];
-						for (j = 0; j < length; j++) {
-							(functions[j] as Function).call(null, mouseEvent3D);
-							if (mouseEvent3D.stopImmediate) return;
-						}
-						if (mouseEvent3D.stop) return;
-					}
-				}
-			}
 		}
 
 		private function calculateLocalCoords(camera:Camera3D, transform:Transform3D, z:Number, mouseEvent:MouseEvent):void {
@@ -1116,48 +857,6 @@ package alternativa.engine3d.core {
 			localCoords.x = transform.a*x + transform.b*y + transform.c*z + transform.d;
 			localCoords.y = transform.e*x + transform.f*y + transform.g*z + transform.h;
 			localCoords.z = transform.i*x + transform.j*y + transform.k*z + transform.l;
-		}
-
-		private function defineTarget(index:int):void {
-			var source:Object3D;
-			// Get surfaces
-			var surfaces:Vector.<Surface> = raysSurfaces[index];
-			var depths:Vector.<Number> = raysDepths[index];
-			// Loop surfaces
-			for (var i:int = surfaces.length - 1; i >= 0; i--) {
-				var surface:Surface = surfaces[i];
-				var depth:Number = depths[i];
-				var object:Object3D = surface.object;
-				var potentialTarget:Object3D = null;
-				var obj:Object3D;
-				// Get possible target
-				for (obj = object; obj != null; obj = obj.parent) {
-					if (!obj.mouseChildren) potentialTarget = null;
-					if (potentialTarget == null && obj.mouseEnabled) potentialTarget = obj;
-				}
-				// If possible target found
-				if (potentialTarget != null) {
-					if (target != null) {
-						for (obj = potentialTarget; obj != null; obj = obj.parent) {
-							if (obj == target) {
-								source = object;
-								if (target != potentialTarget) {
-									target = potentialTarget;
-									targetSurface = surface;
-									targetDepth = depth;
-								}
-								break;
-							}
-						}
-					} else {
-						source = object;
-						target = potentialTarget;
-						targetSurface = surface;
-						targetDepth = depth;
-					}
-					if (source == target) break;
-				}
-			}
 		}
 
 		/**

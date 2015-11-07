@@ -9,15 +9,10 @@
 package alternativa.engine3d.core {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.events.Event3D;
-	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.materials.compiler.Linker;
 	import alternativa.engine3d.materials.compiler.Procedure;
 	import alternativa.engine3d.objects.Surface;
 
-	import flash.events.Event;
-	import flash.events.EventPhase;
-	import flash.events.IEventDispatcher;
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
 	import flash.utils.Dictionary;
@@ -25,407 +20,41 @@ package alternativa.engine3d.core {
 
 	use namespace alternativa3d;
 
-	/**
-	 * Dispatches when an <code>Object3D</code> is added  as a child to another <code>Object3D</code>.
-	 * Following methods generate this event:  <code>Object3D.addChild()</code>, <code>Object3D.addChildAt()</code>.
-	 *
-	 * @see #addChild()
-	 * @see #addChildAt()
-	 *
-	 * @eventType alternativa.engine3d.core.events.Event3D.ADDED
-	 */
-	[Event(name="added",type="alternativa.engine3d.core.events.Event3D")]
+	public class Object3D
+    {
+		protected static const trm:Transform3D = new Transform3D();
 
-	/**
-	 * Dispatched when a  <code>Object3D</code> is about to be removed from the children list.
-	 * Following methods generate this event: <code>Object3D.removeChild()</code> and <code>Object3D.removeChildAt()</code>.
-	 *
-	 * @see #removeChild()
-	 * @see #removeChildAt()
-	 * @eventType alternativa.engine3d.core.events.Event3D.REMOVED
-	 */
-	[Event(name="removed",type="alternativa.engine3d.core.events.Event3D")]
-
-	/**
-	 * Dispatched when a user presses and releases the main button
-	 * of the user's pointing device over the same <code>Object3D</code>.
-	 * Any other evens can occur between pressing and releasing the button.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.CLICK
-	 */
-	[Event (name="click", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses and releases the main button of
-	 * a pointing device twice in rapid succession over the same <code>Object3D</code>.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.DOUBLE_CLICK
-	 */
-	[Event (name="doubleClick", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses and releases the middle button
-	 * of the user's pointing device over the same <code>Object3D</code>.
-	 * Any other evens can occur between pressing and releasing the button.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MIDDLE_CLICK
-	 */
-	[Event (name="middleClick", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses the middle pointing device button over an <code>Object3D</code> instance.
-	 * Any other evens can occur between pressing and releasing the button.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MIDDLE_MOUSE_DOWN
-	 */
-	[Event (name="middleMouseDown", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user releases the pointing device button over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MIDDLE_MOUSE_UP
-	 */
-	[Event (name="middleMouseUp", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses the pointing device button over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_DOWN
-	 */
-	[Event (name="mouseDown", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user moves the pointing device while it is over an <code>Object3D</code>.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_MOVE
-	 */
-	[Event (name="mouseMove", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user releases the pointing device button over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_UP
-	 */
-	[Event (name="mouseUp", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * 	Dispatched when the user moves a pointing device away from an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_OUT
-	 */
-	[Event (name="mouseOut", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when the user moves a pointing device over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_OVER
-	 */
-	[Event (name="mouseOver", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * 	Dispatched when a mouse wheel is spun over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_WHEEL
-	 */
-	[Event (name="mouseWheel", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses and releases the right button
-	 * of the user's pointing device over the same <code>Object3D</code>.
-	 * Any other evens can occur between pressing and releasing the button.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.CLICK
-	 */
-	[Event (name="rightClick", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user presses the right pointing device button over an <code>Object3D</code> instance.
-	 * Any other evens can occur between pressing and releasing the button.
-	 *
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.CLICK
-	 */
-	[Event (name="rightMouseDown", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * Dispatched when a user releases the pointing device button over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.MOUSE_UP
-	 */
-	[Event (name="rightMouseUp", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * 	Dispatched when the user moves a pointing device over an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.ROLL_OVER
-	 */
-	[Event (name="rollOver", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * 	Dispatched when the user moves a pointing device away from an <code>Object3D</code> instance.
-	 * @eventType alternativa.engine3d.events.MouseEvent3D.ROLL_OUT
-	 */
-	[Event (name="rollOut", type="alternativa.engine3d.core.events.MouseEvent3D")]
-
-	/**
-	 * <code>Object3D</code> class ia a base class for all 3D objects. Any <code>Object3D</code> has a property
-	 * of transformation that defines its position in space, the property <code>boundBox</code>,
-	 * which describes the rectangular parallelepiped into which fits this 3D object.
-	 * The last feature of this class is the one place in the 3d hierarchy like
-	 * <code>DisplayObject</code> has its own place in Display List.
-	 * Unlike the previous version Alternativa3D, an instance of this class can contain many children,
-	 * so it can act as a container. This also applies to all the inheritors <code>Object3D</code> .
-	 *
-	 * @see alternativa.engine3d.objects.Mesh
-	 * @see alternativa.engine3d.core.BoundBox
-	 */
-	public class Object3D implements IEventDispatcher {
-
-		// Mouse moving
-		private static const MOUSE_MOVE_BIT:uint = 1;
-		private static const MOUSE_OVER_BIT:uint = 2;
-		private static const MOUSE_OUT_BIT:uint = 4;
-		private static const ROLL_OVER_BIT:uint = 0x8;
-		private static const ROLL_OUT_BIT:uint = 0x10;
-		private static const USE_HAND_CURSOR_BIT:uint = 0x20;
-
-		// Mouse pressing
-		private static const MOUSE_DOWN_BIT:uint = 0x40;
-		private static const MOUSE_UP_BIT:uint = 0x80;
-		private static const CLICK_BIT:uint = 0x100;
-		private static const DOUBLE_CLICK_BIT:uint = 0x200;
-
-		// Mouse wheel
-		private static const MOUSE_WHEEL_BIT:uint = 0x400;
-
-		// Mouse middle button
-		private static const MIDDLE_CLICK_BIT:uint = 0x800;
-		private static const MIDDLE_MOUSE_DOWN_BIT:uint = 0x1000;
-		private static const MIDDLE_MOUSE_UP_BIT:uint = 0x2000;
-
-		// Mouse right button
-		private static const RIGHT_CLICK_BIT:uint = 0x4000;
-		private static const RIGHT_MOUSE_DOWN_BIT:uint = 0x8000;
-		private static const RIGHT_MOUSE_UP_BIT:uint = 0x10000;
-
-		/**
-		 * @private
-		 */
-		alternativa3d static const MOUSE_HANDLING_MOVING:uint = MOUSE_MOVE_BIT | MOUSE_OVER_BIT | MOUSE_OUT_BIT | ROLL_OVER_BIT | ROLL_OUT_BIT | USE_HAND_CURSOR_BIT;
-		/**
-		 * @private
-		 */
-		alternativa3d static const MOUSE_HANDLING_PRESSING:uint = MOUSE_DOWN_BIT | MOUSE_UP_BIT | CLICK_BIT | DOUBLE_CLICK_BIT;
-		/**
-		 * @private
-		 */
-		alternativa3d static const MOUSE_HANDLING_WHEEL:uint = MOUSE_WHEEL_BIT;
-		/**
-		 * @private
-		 */
-		alternativa3d static const MOUSE_HANDLING_MIDDLE_BUTTON:uint = MIDDLE_CLICK_BIT | MIDDLE_MOUSE_DOWN_BIT | MIDDLE_MOUSE_UP_BIT;
-		/**
-		 * @private
-		 */
-		alternativa3d static const MOUSE_HANDLING_RIGHT_BUTTON:uint = RIGHT_CLICK_BIT | RIGHT_MOUSE_DOWN_BIT | RIGHT_MOUSE_UP_BIT;
-
-		/**
-		 * Custom data available to store within <code>Object3D</code> by user.
-		 */
-		public var userData:Object = {};
-
-		/**
-		 * @private
-		 */
-		public var useShadow:Boolean = true;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _excludedLights:Vector.<Light3D> = new Vector.<Light3D>();
-
-		/**
-		 * @private
-		 */
-		alternativa3d static const trm:Transform3D = new Transform3D();
-
-		/**
-		 * Name of the object.
-		 */
+        public var userData:Object = {};
+        public var useShadow:Boolean = true;
+        public var _excludedLights:Vector.<Light3D> = new Vector.<Light3D>();
 		public var name:String;
-
-		/**
-		 * Whether or not the display object is visible.
-		 */
 		public var visible:Boolean = true;
-
-		/**
-		 * Specifies whether this object receives mouse, or other user input, messages.
-		 * The default value is  <code>true</code>.
-		 *
-		 * The behaviour is consistent with behaviour of <code>flash.display.InteractiveObject</code>.
-		 *
-		 */
-		public var mouseEnabled:Boolean = true;
-
-		/**
-		 * Determines whether or not the children of the object are mouse, or user input device, enabled.
-		 * In case of  <code>false</code>, the value of <code>target</code>  property of the event
-		 * will be the self <code>Object3D</code>  wether mouse pointed on it  or on its child.
-		 * The default value is   <code>true</code>.
-		 */
-		public var mouseChildren:Boolean = true;
-
-		/**
-		 * Specifies whether the object receives <code>doubleClick</code> events.
-		 * The default value is false, which means that by default an Object3D
-		 * instance does not receive <code>doubleClick</code> events.
-		 *
-		 * The <code>doubleClickEnabled</code> property of current <code>stage</code> also should be <code>true</code>.
-		 */
-		public var doubleClickEnabled:Boolean = false;
-
-		/**
-		 * Bounds of the object described as rectangular parallelepiped.
-		 */
 		public var boundBox:BoundBox;
-
-        /**
-         * Determines whether object is opaque for ray intersection
-         */
         public var includeInRayIntersect:Boolean = true;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _x:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _y:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _z:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _rotationX:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _rotationY:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _rotationZ:Number = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _scaleX:Number = 1;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _scaleY:Number = 1;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _scaleZ:Number = 1;
-
+		public var _x:Number = 0;
+		public var _y:Number = 0;
+		public var _z:Number = 0;
+		public var _rotationX:Number = 0;
+		public var _rotationY:Number = 0;
+		public var _rotationZ:Number = 0;
+		public var _scaleX:Number = 1;
+		public var _scaleY:Number = 1;
+		public var _scaleZ:Number = 1;
 		public var parent:Object3D; // read-only
-
-		/**
-		 * @private
-		 */
-		alternativa3d var childrenList:Object3D;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var next:Object3D;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var transform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var inverseTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var transformChanged:Boolean = true;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var cameraToLocalTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var localToCameraTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var localToGlobalTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var globalToLocalTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var localToLightTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var lightToLocalTransform:Transform3D = new Transform3D();
-
-		/**
-		 * @private
-		 */
-		alternativa3d var culling:int;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var listening:Boolean;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var mouseHandlingType:uint = 0;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var distance:Number;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var bubbleListeners:Object;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var captureListeners:Object;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var transformProcedure:Procedure;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var deltaTransformProcedure:Procedure;
+		public var childrenList:Object3D;
+		public var next:Object3D;
+		public var transform:Transform3D = new Transform3D();
+		public var inverseTransform:Transform3D = new Transform3D();
+		public var transformChanged:Boolean = true;
+		public var cameraToLocalTransform:Transform3D = new Transform3D();
+		public var localToCameraTransform:Transform3D = new Transform3D();
+		public var localToGlobalTransform:Transform3D = new Transform3D();
+		public var globalToLocalTransform:Transform3D = new Transform3D();
+		public var localToLightTransform:Transform3D = new Transform3D();
+		public var culling:int;
+		public var distance:Number;
+		public var transformProcedure:Procedure;
+		public var deltaTransformProcedure:Procedure;
 
 		/**
 		 * X coordinate.
@@ -434,9 +63,6 @@ package alternativa.engine3d.core {
 			return _x;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set x(value:Number):void {
 			if (_x != value) {
 				_x = value;
@@ -451,9 +77,6 @@ package alternativa.engine3d.core {
 			return _y;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set y(value:Number):void {
 			if (_y != value) {
 				_y = value;
@@ -468,9 +91,6 @@ package alternativa.engine3d.core {
 			return _z;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set z(value:Number):void {
 			if (_z != value) {
 				_z = value;
@@ -485,9 +105,6 @@ package alternativa.engine3d.core {
 			return _rotationX;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set rotationX(value:Number):void {
 			if (_rotationX != value) {
 				_rotationX = value;
@@ -502,9 +119,6 @@ package alternativa.engine3d.core {
 			return _rotationY;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set rotationY(value:Number):void {
 			if (_rotationY != value) {
 				_rotationY = value;
@@ -519,9 +133,6 @@ package alternativa.engine3d.core {
 			return _rotationZ;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set rotationZ(value:Number):void {
 			if (_rotationZ != value) {
 				_rotationZ = value;
@@ -536,9 +147,6 @@ package alternativa.engine3d.core {
 			return _scaleX;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set scaleX(value:Number):void {
 			if (_scaleX != value) {
 				_scaleX = value;
@@ -553,9 +161,6 @@ package alternativa.engine3d.core {
 			return _scaleY;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set scaleY(value:Number):void {
 			if (_scaleY != value) {
 				_scaleY = value;
@@ -570,9 +175,6 @@ package alternativa.engine3d.core {
 			return _scaleZ;
 		}
 
-		/**
-		 * @private
-		 */
 		public function set scaleZ(value:Number):void {
 			if (_scaleZ != value) {
 				_scaleZ = value;
@@ -589,9 +191,6 @@ package alternativa.engine3d.core {
 			return new Matrix3D(Vector.<Number>([transform.a, transform.e, transform.i, 0, transform.b, transform.f, transform.j, 0, transform.c, transform.g, transform.k, 0, transform.d, transform.h, transform.l, 1]));
 		}
 
-		/**
-		 * @private
-		 */
 		public function set matrix(value:Matrix3D):void {
 			var v:Vector.<Vector3D> = value.decompose();
 			var t:Vector3D = v[0];
@@ -607,25 +206,6 @@ package alternativa.engine3d.core {
 			_scaleY = s.y;
 			_scaleZ = s.z;
 			transformChanged = true;
-		}
-
-		/**
-		 * A Boolean value that indicates whether the pointing hand (hand cursor)
-		 * appears when the pointer rolls over a <code>Object3D</code>.
-		 */
-		public function get useHandCursor():Boolean {
-			return (mouseHandlingType & USE_HAND_CURSOR_BIT) != 0;
-		}
-
-		/**
-		 * @private
-		 */
-		public function set useHandCursor(value:Boolean):void {
-			if (value) {
-				mouseHandlingType |= USE_HAND_CURSOR_BIT;
-			} else {
-				mouseHandlingType &= ~USE_HAND_CURSOR_BIT;
-			}
 		}
 
 		/**
@@ -654,9 +234,6 @@ package alternativa.engine3d.core {
             return data;
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function intersectRayChildren(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
 			var minTime:Number = Number.MAX_VALUE;
 			var minData:RayIntersectionData = rayIntersectionContext.rayIntersectionData;
@@ -808,9 +385,6 @@ package alternativa.engine3d.core {
 			result.z = trm.i*point.x + trm.j*point.y + trm.k*point.z + trm.l;
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function get useLights():Boolean {
 			return false;
 		}
@@ -828,290 +402,9 @@ package alternativa.engine3d.core {
 			updateBoundBox(boundBox, null);
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function updateBoundBox(boundBox:BoundBox, transform:Transform3D = null):void {
 		}
 
-		/**
-		 * Registers an event listener object with an EventDispatcher object
-		 * so that the listener receives notification of an event.
-		 * @param type The type of event.
-		 * @param listener The listener function that processes the event.
-		 * @param useCapture  Determines whether the listener works in the capture phase or the target and bubbling phases.
-		 * @param priority The priority level of the event listener.
-		 * @param useWeakReference Does not used.
-		 */
-		public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void {
-			if (listener == null) throw new TypeError("Parameter listener must be non-null.");
-			var listeners:Object;
-			if (useCapture) {
-				if (captureListeners == null) captureListeners = {};
-				listeners = captureListeners;
-			} else {
-				if (bubbleListeners == null) bubbleListeners = {};
-				listeners = bubbleListeners;
-			}
-			var vector:Vector.<Function> = listeners[type];
-			if (vector == null) {
-				// There are not listeners of this type
-				vector = new Vector.<Function>();
-				listeners[type] = vector;
-
-				// update mouseHandlingType bits
-				switch (type) {
-					case MouseEvent3D.MOUSE_MOVE:
-						mouseHandlingType |= MOUSE_MOVE_BIT;
-						break;
-					case MouseEvent3D.MOUSE_OVER:
-						mouseHandlingType |= MOUSE_OVER_BIT;
-						break;
-					case MouseEvent3D.MOUSE_OUT:
-						mouseHandlingType |= MOUSE_OUT_BIT;
-						break;
-					case MouseEvent3D.ROLL_OVER:
-						mouseHandlingType |= ROLL_OVER_BIT;
-						break;
-					case MouseEvent3D.ROLL_OUT:
-						mouseHandlingType |= ROLL_OUT_BIT;
-						break;
-					case MouseEvent3D.MOUSE_DOWN:
-						mouseHandlingType |= MOUSE_DOWN_BIT;
-						break;
-					case MouseEvent3D.MOUSE_UP:
-						mouseHandlingType |= MOUSE_UP_BIT;
-						break;
-					case MouseEvent3D.CLICK:
-						mouseHandlingType |= CLICK_BIT;
-						break;
-					case MouseEvent3D.DOUBLE_CLICK:
-						mouseHandlingType |= DOUBLE_CLICK_BIT;
-						break;
-					case MouseEvent3D.MOUSE_WHEEL:
-						mouseHandlingType |= MOUSE_WHEEL_BIT;
-						break;
-					case MouseEvent3D.MIDDLE_CLICK:
-						mouseHandlingType |= MIDDLE_CLICK_BIT;
-						break;
-					case MouseEvent3D.MIDDLE_MOUSE_DOWN:
-						mouseHandlingType |= MIDDLE_MOUSE_DOWN_BIT;
-						break;
-					case MouseEvent3D.MIDDLE_MOUSE_UP:
-						mouseHandlingType |= MIDDLE_MOUSE_UP_BIT;
-						break;
-					case MouseEvent3D.RIGHT_CLICK:
-						mouseHandlingType |= RIGHT_CLICK_BIT;
-						break;
-					case MouseEvent3D.RIGHT_MOUSE_DOWN:
-						mouseHandlingType |= RIGHT_MOUSE_DOWN_BIT;
-						break;
-					case MouseEvent3D.RIGHT_MOUSE_UP:
-						mouseHandlingType |= RIGHT_MOUSE_UP_BIT;
-						break;
-				}
-			}
-			if (vector.indexOf(listener) < 0) {
-				vector.push(listener);
-			}
-		}
-
-		/**
-		 * Removes a listener from the EventDispatcher object.
-		 * @param type The type of event.
-		 * @param listener The listener object to remove.
-		 * @param useCapture Specifies whether the listener was registered for the capture phase or the target and bubbling phases.
-		 */
-		public function removeEventListener(type:String, listener:Function, useCapture:Boolean = false):void {
-			if (listener == null) throw new TypeError("Parameter listener must be non-null.");
-			var listeners:Object = useCapture ? captureListeners : bubbleListeners;
-			if (listeners != null) {
-				var vector:Vector.<Function> = listeners[type];
-				if (vector != null) {
-					var i:int = vector.indexOf(listener);
-					if (i >= 0) {
-						var length:int = vector.length;
-						for (var j:int = i + 1; j < length; j++,i++) {
-							vector[i] = vector[j];
-						}
-						if (length > 1) {
-							vector.length = length - 1;
-						} else {
-							// update mouseHandlingType bits
-							var noListeners:Boolean;
-							if (listeners == captureListeners) {
-								noListeners = (bubbleListeners == null || bubbleListeners[type] == null);
-							} else {
-								noListeners = (captureListeners == null || captureListeners[type] == null);
-							}
-							if (noListeners) {
-								switch (type) {
-									case MouseEvent3D.MOUSE_MOVE:
-										mouseHandlingType &= ~MOUSE_MOVE_BIT;
-										break;
-									case MouseEvent3D.MOUSE_OVER:
-										mouseHandlingType &= ~MOUSE_OVER_BIT;
-										break;
-									case MouseEvent3D.MOUSE_OUT:
-										mouseHandlingType &= ~MOUSE_OUT_BIT;
-										break;
-									case MouseEvent3D.ROLL_OVER:
-										mouseHandlingType &= ~ROLL_OVER_BIT;
-										break;
-									case MouseEvent3D.ROLL_OUT:
-										mouseHandlingType &= ~ROLL_OUT_BIT;
-										break;
-									case MouseEvent3D.MOUSE_DOWN:
-										mouseHandlingType &= ~MOUSE_DOWN_BIT;
-										break;
-									case MouseEvent3D.MOUSE_UP:
-										mouseHandlingType &= ~MOUSE_UP_BIT;
-										break;
-									case MouseEvent3D.CLICK:
-										mouseHandlingType &= ~CLICK_BIT;
-										break;
-									case MouseEvent3D.DOUBLE_CLICK:
-										mouseHandlingType &= ~DOUBLE_CLICK_BIT;
-										break;
-									case MouseEvent3D.MOUSE_WHEEL:
-										mouseHandlingType &= ~MOUSE_WHEEL_BIT;
-										break;
-									case MouseEvent3D.MIDDLE_CLICK:
-										mouseHandlingType &= ~MIDDLE_CLICK_BIT;
-										break;
-									case MouseEvent3D.MIDDLE_MOUSE_DOWN:
-										mouseHandlingType &= ~MIDDLE_MOUSE_DOWN_BIT;
-										break;
-									case MouseEvent3D.MIDDLE_MOUSE_UP:
-										mouseHandlingType &= ~MIDDLE_MOUSE_UP_BIT;
-										break;
-									case MouseEvent3D.RIGHT_CLICK:
-										mouseHandlingType &= ~RIGHT_CLICK_BIT;
-										break;
-									case MouseEvent3D.RIGHT_MOUSE_DOWN:
-										mouseHandlingType &= ~RIGHT_MOUSE_DOWN_BIT;
-										break;
-									case MouseEvent3D.RIGHT_MOUSE_UP:
-										mouseHandlingType &= ~RIGHT_MOUSE_UP_BIT;
-										break;
-								}
-							}
-
-							delete listeners[type];
-
-							var key:*;
-							for (key in listeners) break;
-							if (!key) {
-								if (listeners == captureListeners) {
-									captureListeners = null;
-								} else {
-									bubbleListeners = null;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		/**
-		 * Checks whether the EventDispatcher object has any listeners registered for a specific type of event.
-		 * @param type The type of event.
-		 * @return A value of true if a listener of the specified type is registered; false otherwise.
-		 */
-		public function hasEventListener(type:String):Boolean {
-			return captureListeners != null && captureListeners[type] || bubbleListeners != null && bubbleListeners[type];
-		}
-
-		/**
-		 * Checks whether an event listener is registered with this EventDispatcher object or any of its ancestors for the specified event type.
-		 * @param type  The type of event.
-		 * @return A value of true if a listener of the specified type will be triggered; false otherwise.
-		 */
-		public function willTrigger(type:String):Boolean {
-			for (var object:Object3D = this; object != null; object = object.parent) {
-				if (object.captureListeners != null && object.captureListeners[type] || object.bubbleListeners != null && object.bubbleListeners[type]) return true;
-			}
-			return false;
-		}
-
-		/**
-		 * Dispatches an <code>event</code> into the event flow. In case of  dispatched event extends <code>Event</code> class, properties <code>target</code> and  <code>currentTarget</code>
-		 * will not be set. They will be set if  dispatched event extends <code>Event3D</code> oe subclasses.
-		 * @param event The <code>Event</code> object that is dispatched into the event flow.
-		 * @return A value of <code>true</code> if the event was successfully dispatched. Otherwise returns <code>false</code>.
-		 */
-		public function dispatchEvent(event:Event):Boolean {
-			if (event == null) throw new TypeError("Parameter event must be non-null.");
-			var event3D:Event3D = event as Event3D;
-			if (event3D != null) {
-				event3D._target = this;
-			}
-			var branch:Vector.<Object3D> = new Vector.<Object3D>();
-			var branchLength:int = 0;
-			var object:Object3D;
-			var i:int;
-			var j:int;
-			var length:int;
-			var vector:Vector.<Function>;
-			var functions:Vector.<Function>;
-			for (object = this; object != null; object = object.parent) {
-				branch[branchLength] = object;
-				branchLength++;
-			}
-			// capture phase
-			for (i = branchLength - 1; i > 0; i--) {
-				object = branch[i];
-				if (event3D != null) {
-					event3D._currentTarget = object;
-					event3D._eventPhase = EventPhase.CAPTURING_PHASE;
-				}
-
-				if (object.captureListeners != null) {
-					vector = object.captureListeners[event.type];
-					if (vector != null) {
-						length = vector.length;
-						functions = new Vector.<Function>();
-						for (j = 0; j < length; j++) functions[j] = vector[j];
-						for (j = 0; j < length; j++) (functions[j] as Function).call(null, event);
-					}
-				}
-			}
-			if (event3D != null) {
-				event3D._eventPhase = EventPhase.AT_TARGET;
-			}
-			// target + bubbles phases
-			for (i = 0; i < branchLength; i++) {
-				object = branch[i];
-				if (event3D != null) {
-					event3D._currentTarget = object;
-					if (i > 0) {
-						event3D._eventPhase = EventPhase.BUBBLING_PHASE;
-					}
-				}
-				if (object.bubbleListeners != null) {
-					vector = object.bubbleListeners[event.type];
-					if (vector != null) {
-						length = vector.length;
-						functions = new Vector.<Function>();
-						for (j = 0; j < length; j++) functions[j] = vector[j];
-						for (j = 0; j < length; j++) (functions[j] as Function).call(null, event);
-					}
-				}
-				if (!event.bubbles) break;
-			}
-			return true;
-		}
-
-		/**
-		 * @private
-		 */
-		alternativa3d function removeFromParent():void {
-			if (parent != null) {
-				parent.removeFromList(this);
-				parent = null;
-			}
-		}
 
 		/**
 		 *  Adds given <code>Object3D</code> instance as a child to the end of this <code>Object3D</code>'s children list.
@@ -1133,8 +426,6 @@ package alternativa.engine3d.core {
 				// Adding
 				addToList(child);
 				child.parent = this;
-				// Dispatching the event
-				if (child.willTrigger(Event3D.ADDED)) child.dispatchEvent(new Event3D(Event3D.ADDED, true));
 			} else {
 				child = removeFromList(child);
 				if (child == null) throw new ArgumentError("Cannot add child.");
@@ -1158,70 +449,6 @@ package alternativa.engine3d.core {
 			child = removeFromList(child);
 			if (child == null) throw new ArgumentError("Cannot remove child.");
 			// Dispatching the event
-			if (child.willTrigger(Event3D.REMOVED)) child.dispatchEvent(new Event3D(Event3D.REMOVED, true));
-			child.parent = null;
-			return child;
-		}
-
-		/**
-		 * Adds a child <code>Object3D</code> instance to this <code>Object3D</code> instance. The child is added at the index position specified.
-		 * @param child The <code>Object3D</code> instance to add as a child of this <code>Object3D</code> instance.
-		 * @param index The index position to which the child is added.
-		 * @return The <code>Object3D</code> instance that you pass in the child parameter.
-		 */
-		public function addChildAt(child:Object3D, index:int):Object3D {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child == this) throw new ArgumentError("An object cannot be added as a child of itself.");
-			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
-			for (var container:Object3D = parent; container != null; container = container.parent) {
-				if (container == child) throw new ArgumentError("An object cannot be added as a child to one of it's children (or children's children, etc.).");
-			}
-			// Search for element by index
-			var current:Object3D = childrenList;
-			for (var i:int = 0; i < index; i++) {
-				if (current == null) throw new RangeError("The supplied index is out of bounds.");
-				current = current.next;
-			}
-			// Adding
-			if (child.parent != this) {
-				// Removing from old parent
-				if (child.parent != null) child.parent.removeChild(child);
-				// Adding
-				addToList(child, current);
-				child.parent = this;
-				// Dispatching the event
-				if (child.willTrigger(Event3D.ADDED)) child.dispatchEvent(new Event3D(Event3D.ADDED, true));
-			} else {
-				child = removeFromList(child);
-				if (child == null) throw new ArgumentError("Cannot add child.");
-				// Adding
-				addToList(child, current);
-			}
-			return child;
-		}
-
-		/**
-		 * Removes a child <code>Object3D</code> from the specified index position in the child list of
-		 * the <code>Object3D</code>. The parent property of the removed child is set to <code>null</code>.
-		 *
-		 * @param index The child index of the <code>Object3D</code> to remove.
-		 * @return The <code>Object3D</code> instance that was removed.
-		 */
-		public function removeChildAt(index:int):Object3D {
-			//  Error checking
-			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
-			// Search for element by index
-			var child:Object3D = childrenList;
-			for (var i:int = 0; i < index; i++) {
-				if (child == null) throw new RangeError("The supplied index is out of bounds.");
-				child = child.next;
-			}
-			if (child == null) throw new RangeError("The supplied index is out of bounds.");
-			// Removing
-			removeFromList(child);
-			// Dispatching the event
-			if (child.willTrigger(Event3D.REMOVED)) child.dispatchEvent(new Event3D(Event3D.REMOVED, true));
 			child.parent = null;
 			return child;
 		}
@@ -1275,7 +502,6 @@ package alternativa.engine3d.core {
 			while (begin != end) {
 				var next:Object3D = begin.next;
 				begin.next = null;
-				if (begin.willTrigger(Event3D.REMOVED)) begin.dispatchEvent(new Event3D(Event3D.REMOVED, true));
 				begin.parent = null;
 				begin = next;
 			}
@@ -1475,9 +701,6 @@ package alternativa.engine3d.core {
 			}
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function removeFromList(child:Object3D):Object3D {
 			var prev:Object3D;
 			for (var current:Object3D = childrenList; current != null; current = current.next) {
@@ -1514,9 +737,6 @@ package alternativa.engine3d.core {
 			return res;
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function fillResources(resources:Dictionary, hierarchy:Boolean = false, resourceType:Class = null):void {
 			if (hierarchy) {
 				for (var child:Object3D = childrenList; child != null; child = child.next) {
@@ -1525,9 +745,6 @@ package alternativa.engine3d.core {
 			}
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function composeTransforms():void {
 			// Matrix
 			var cosX:Number = Math.cos(_rotationX);
@@ -1576,19 +793,15 @@ package alternativa.engine3d.core {
 			transformChanged = false;
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function calculateVisibility(camera:Camera3D):void {
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function calculateChildrenVisibility(camera:Camera3D):void {
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+			for (var child:Object3D = childrenList; child != null; child = child.next)
+            {
 				// Checking visibility flag
-				if (child.visible) {
+				if (child.visible)
+                {
 					// Compose matrix and inverse matrix
 					if (child.transformChanged) child.composeTransforms();
 					// Calculating matrix for converting from camera coordinates to local coordinates
@@ -1596,12 +809,14 @@ package alternativa.engine3d.core {
 					// Calculating matrix for converting from local coordinates to  camera coordinates
 					child.localToCameraTransform.combine(localToCameraTransform, child.transform);
 
-					camera.globalMouseHandlingType |= child.mouseHandlingType;
 					// Culling checking
-					if (child.boundBox != null) {
+					if (child.boundBox != null)
+                    {
 						camera.calculateFrustum(child.cameraToLocalTransform);
 						child.culling = child.boundBox.checkFrustumCulling(camera.frustum, 63);
-					} else {
+					}
+                    else
+                    {
 						child.culling = 63;
 					}
 					// Calculating visibility of the self content
@@ -1612,32 +827,22 @@ package alternativa.engine3d.core {
 			}
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
             meshMergerLastRenderCallId = camera.renderCallId;
 		}
 
-		/**
-		 * @private
-		 */
 		alternativa3d function collectChildrenDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
 			var i:int;
 			var light:Light3D;
 
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+			for (var child:Object3D = childrenList; child != null; child = child.next)
+            {
 				// Checking visibility flag
-				if (child.visible) {
+				if (child.visible)
+                {
 					// Check getting in frustum and occluding
-					if (child.culling >= 0) {
-						// Check if the ray crossing the bounding box
-						if (child.boundBox != null) {
-							camera.calculateRays(child.cameraToLocalTransform);
-							child.listening = child.boundBox.checkRays(camera.origins, camera.directions, camera.raysLength);
-						} else {
-							child.listening = true;
-						}
+					if (child.culling >= 0)
+                    {
 						// Check if object needs in lightning
 						var excludedLightLength:int = child._excludedLights.length;
 						if (lightsLength > 0 && child.useLights) {
@@ -1723,9 +928,6 @@ package alternativa.engine3d.core {
             }
         }
 
-		/**
-		 * @private
-		 */
 		alternativa3d function setTransformConstants(drawUnit:DrawUnit, surface:Surface, vertexShader:Linker, camera:Camera3D):void {
 		}
 
@@ -1787,10 +989,6 @@ package alternativa.engine3d.core {
 
 			name = source.name;
 			visible = source.visible;
-			mouseEnabled = source.mouseEnabled;
-			mouseChildren = source.mouseChildren;
-			doubleClickEnabled = source.doubleClickEnabled;
-			useHandCursor = source.useHandCursor;
 			boundBox = source.boundBox ? source.boundBox.clone() : null;
 			_x = source._x;
 			_y = source._y;

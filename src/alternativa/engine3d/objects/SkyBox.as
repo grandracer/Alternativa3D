@@ -194,11 +194,9 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		override alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
-			for (var i:int = 0; i < _surfacesLength; i++) {
-				var surface:Surface = _surfaces[i];
+			for (var i:int = 0; i < surfacesLength; i++) {
+				var surface:Surface = surfaces[i];
 				if (surface.material != null) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow, Renderer.SKY);
-				//Mouse events
-				if (listening) camera.view.addSurfaceToMouseEvents(surface, geometry, transformProcedure);
 			}
 		}
 		
@@ -300,9 +298,9 @@ package alternativa.engine3d.objects {
 			super.clonePropertiesFrom(source);
 			// Clone marks
 			var src:SkyBox = source as SkyBox;
-			for (var i:int = 0; i < src._surfacesLength; i++) {
-				var surface:Surface = src._surfaces[i];
-				var newSurface:Surface = _surfaces[i];
+			for (var i:int = 0; i < src.surfacesLength; i++) {
+				var surface:Surface = src.surfaces[i];
+				var newSurface:Surface = surfaces[i];
 				if (surface == src.leftSurface) {
 					leftSurface = newSurface;
 				} else if (surface == src.rightSurface) {

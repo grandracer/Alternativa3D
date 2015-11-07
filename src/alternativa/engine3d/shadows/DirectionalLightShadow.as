@@ -379,7 +379,7 @@ package alternativa.engine3d.shadows {
 				debugPlane.localToCameraTransform.combine(_light.localToCameraTransform, debugPlane.transform);
 
 				// Draw
-				var debugSurface:Surface = debugPlane._surfaces[0];
+				var debugSurface:Surface = debugPlane.surfaces[0];
 				debugSurface.material.collectDraws(camera, debugSurface, debugPlane.geometry, emptyLightVector, 0, false, -1);
 
 				// Form transformation matrix for debugPlane
@@ -634,9 +634,9 @@ package alternativa.engine3d.shadows {
 				// 1- calculation of transfer matrix from object to light source.
 				objectToShadowMapTransform.combine(cameraToShadowMapContextProjection, object.localToCameraTransform);
 
-				for (var i:int = 0; i < mesh._surfacesLength; i++) {
+				for (var i:int = 0; i < mesh.surfacesLength; i++) {
 					// Form drawcall.
-					var surface:Surface = mesh._surfaces[i];
+					var surface:Surface = mesh.surfaces[i];
 					if (surface.material == null) continue;
 
 					var material:Material = surface.material;

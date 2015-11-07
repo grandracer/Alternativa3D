@@ -9,7 +9,6 @@
 package alternativa.engine3d.objects {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
@@ -34,15 +33,8 @@ package alternativa.engine3d.objects {
 		 * @see alternativa.engine3d.resources.Geometry
 		 */
 		public var geometry:Geometry;
-
-		/**
-		 * @private
-		 */
-		alternativa3d var _surfaces:Vector.<Surface> = new Vector.<Surface>();
-		/**
-		 * @private
-		 */
-		alternativa3d var _surfacesLength:int = 0;
+		public var surfaces:Vector.<Surface> = new Vector.<Surface>();
+		public var surfacesLength:int = 0;
 
 		/**
 		 * @inheritDoc
@@ -55,7 +47,7 @@ package alternativa.engine3d.objects {
 			var contentData:RayIntersectionData;
 			if (rayIntersectionContext.childrenCallStack == null && geometry != null && (boundBox == null || boundBox.intersectRay(origin, direction))) {
 				var minTime:Number = Number.MAX_VALUE;
-				for each (var surface:Surface in _surfaces) {
+				for each (var surface:Surface in surfaces) {
                     if (rayIntersectionContext.surface == null || rayIntersectionContext.surface == surface) {
                         var indexBegin:uint = Math.max(rayIntersectionContext.stopIndex, surface.indexBegin);
                         var numTrianglesAvailable:uint = surface.numTriangles - (indexBegin - surface.indexBegin) / 3;
@@ -98,7 +90,7 @@ package alternativa.engine3d.objects {
 			res.material = material;
 			res.indexBegin = indexBegin;
 			res.numTriangles = numTriangles;
-			_surfaces[_surfacesLength++] = res;
+			surfaces[surfacesLength++] = res;
 			return res;
 		}
 
@@ -109,14 +101,14 @@ package alternativa.engine3d.objects {
 		 * @return  Surface with given index.
 		 */
 		public function getSurface(index:int):Surface {
-			return _surfaces[index];
+			return surfaces[index];
 		}
 
 		/**
 		 * Number of surfaces.
 		 */
 		public function get numSurfaces():int {
-			return _surfacesLength;
+			return surfacesLength;
 		}
 
 		/**
@@ -127,8 +119,8 @@ package alternativa.engine3d.objects {
 		 * @see alternativa.engine3d.materials
 		 */
 		public function setMaterialToAllSurfaces(material:Material):void {
-			for (var i:int = 0; i < _surfaces.length; i++) {
-				_surfaces[i].material = material;
+			for (var i:int = 0; i < surfaces.length; i++) {
+				surfaces[i].material = material;
 			}
 		}
 
@@ -151,8 +143,8 @@ package alternativa.engine3d.objects {
 		 */
 		alternativa3d override function fillResources(resources:Dictionary, hierarchy:Boolean = false, resourceType:Class = null):void {
 			if (geometry != null && (resourceType == null || geometry is resourceType)) resources[geometry] = true;
-			for (var i:int = 0; i < _surfacesLength; i++) {
-				var s:Surface = _surfaces[i];
+			for (var i:int = 0; i < surfacesLength; i++) {
+				var s:Surface = surfaces[i];
 				if (s.material != null) s.material.fillResources(resources, resourceType);
 			}
 			super.fillResources(resources, hierarchy, resourceType);
@@ -163,11 +155,9 @@ package alternativa.engine3d.objects {
 		 */
 		override alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
             meshMergerLastRenderCallId = camera.renderCallId;
-			for (var i:int = 0; i < _surfacesLength; i++) {
-				var surface:Surface = _surfaces[i];
+			for (var i:int = 0; i < surfacesLength; i++) {
+				var surface:Surface = surfaces[i];
 				if (surface.material != null && surface.meshMergerIsVisible && !surface.meshMergerInBuffer) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow, -1);
-				// Mouse events
-				if (listening) camera.view.addSurfaceToMouseEvents(surface, geometry, transformProcedure);
 			}
 		}
 
@@ -187,9 +177,9 @@ package alternativa.engine3d.objects {
 			super.clonePropertiesFrom(source);
 			var mesh:Mesh = source as Mesh;
 			geometry = mesh.geometry;
-			_surfacesLength = 0;
-			_surfaces.length = 0;
-			for each (var s:Surface in mesh._surfaces) {
+			surfacesLength = 0;
+			surfaces.length = 0;
+			for each (var s:Surface in mesh.surfaces) {
 				addSurface(s.material, s.indexBegin, s.numTriangles);
 			}
 		}

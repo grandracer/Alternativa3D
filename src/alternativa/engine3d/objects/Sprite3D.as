@@ -9,13 +9,11 @@
 package alternativa.engine3d.objects {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.DrawUnit;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.core.Renderer;
-	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.materials.Material;
 	import alternativa.engine3d.materials.compiler.Linker;
@@ -185,8 +183,6 @@ package alternativa.engine3d.objects {
 		override alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
 			var geometry:Geometry = getGeometry(camera.context3D);
 			if (surface.material != null) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow, alwaysOnTop ? Renderer.NEXT_LAYER : -1);
-			// Mouse events.
-			if (listening) camera.view.addSurfaceToMouseEvents(surface, geometry, transformProcedure);
 		}
 
 		/**

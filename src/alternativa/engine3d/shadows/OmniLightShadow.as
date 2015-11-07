@@ -349,7 +349,7 @@ package alternativa.engine3d.shadows {
 				debugObject.localToCameraTransform.combine(_light.localToCameraTransform, debugObject.transform);
 
 				// Отрисовываем
-				var debugSurface:Surface = debugObject._surfaces[0];
+				var debugSurface:Surface = debugObject.surfaces[0];
 				debugMaterial.collectDraws(camera, debugSurface, debugObject.geometry, null, 0, false, -1);
 			}
 			actualCasters.length = 0;
@@ -561,8 +561,8 @@ package alternativa.engine3d.shadows {
 				var skin:Skin = mesh as Skin;
 
 				// пробегаемся по сурфейсам
-				for (var i:int = 0; i < mesh._surfacesLength; i++) {
-					var surface:Surface = mesh._surfaces[i];
+				for (var i:int = 0; i < mesh.surfacesLength; i++) {
+					var surface:Surface = mesh.surfaces[i];
 					if (surface.material == null) continue;
 
 					var material:Material = surface.material;
