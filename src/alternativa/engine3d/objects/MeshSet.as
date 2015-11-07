@@ -118,7 +118,6 @@ package alternativa.engine3d.objects {
 					for (var j:int = 0; j < attributesLengths[i]; j++) {
 						attributes.push(i);
 					}
-
 				}
 			}
 			attributes.push(ATTRIBUTE);

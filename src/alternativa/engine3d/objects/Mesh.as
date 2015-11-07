@@ -9,7 +9,6 @@
 package alternativa.engine3d.objects {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Light3D;
@@ -164,20 +163,14 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		override alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
+            previousRenderCallId = currentRenderCallId;
+            currentRenderCallId = camera.renderCallId;
 			for (var i:int = 0; i < _surfacesLength; i++) {
 				var surface:Surface = _surfaces[i];
-				if (surface.material != null) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow, -1);
+				if (surface.material != null && surface.visible) surface.material.collectDraws(camera, surface, geometry, lights, lightsLength, useShadow, -1);
 				// Mouse events
 				if (listening) camera.view.addSurfaceToMouseEvents(surface, geometry, transformProcedure);
 			}
-		}
-
-		/**
-		 * @private
-		 */
-		override alternativa3d function collectGeometry(collider:EllipsoidCollider, excludedObjects:Dictionary):void {
-			collider.geometries.push(geometry);
-			collider.transforms.push(localToGlobalTransform);
 		}
 
 		/**

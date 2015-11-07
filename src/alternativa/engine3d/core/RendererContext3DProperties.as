@@ -44,5 +44,8 @@ package alternativa.engine3d.core {
         public var vertexBuffersOffsets:Vector.<int> = new Vector.<int>();
         public var vertexBuffersFormats:Vector.<String> = new Vector.<String>();
         public var samplers:Vector.<TextureBase> = new Vector.<TextureBase>();
+
+        public var usedBuffers:uint = 0;
+        public var usedSamplers:uint = 0;
 	}
 }

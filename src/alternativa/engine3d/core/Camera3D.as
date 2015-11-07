@@ -192,6 +192,7 @@ public class Camera3D extends Object3D {
 	 * @private
 	 */
 	alternativa3d var numTriangles:int;
+    public var renderCallId:int = 0;
 
 	/**
 	 * Creates a <code>Camera3D</code> object.
@@ -229,6 +230,7 @@ public class Camera3D extends Object3D {
 		occludersLength = 0;
 		// Reset the lights
 		lightsLength = 0;
+        renderCallId++;
 		ambient[0] = 0;
 		ambient[1] = 0;
 		ambient[2] = 0;

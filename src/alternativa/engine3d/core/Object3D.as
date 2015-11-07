@@ -9,7 +9,6 @@
 package alternativa.engine3d.core {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.collisions.EllipsoidCollider;
 	import alternativa.engine3d.core.events.Event3D;
 	import alternativa.engine3d.core.events.MouseEvent3D;
 	import alternativa.engine3d.materials.compiler.Linker;
@@ -430,6 +429,9 @@ package alternativa.engine3d.core {
 		 * @private
 		 */
 		alternativa3d var deltaTransformProcedure:Procedure;
+
+        public var previousRenderCallId:int = 0;
+        public var currentRenderCallId:int = 0;
 
 		/**
 		 * X coordinate.
@@ -1626,6 +1628,8 @@ package alternativa.engine3d.core {
 		 * @private
 		 */
 		alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
+            previousRenderCallId = currentRenderCallId;
+            currentRenderCallId = camera.renderCallId;
 		}
 
 		/**
@@ -1731,40 +1735,6 @@ package alternativa.engine3d.core {
                     lights[pos] = buffer[j];
             }
         }
-
-		/**
-		 * @private
-		 */
-		alternativa3d function collectGeometry(collider:EllipsoidCollider, excludedObjects:Dictionary):void {
-		}
-
-		/**
-		 * @private
-		 */
-		alternativa3d function collectChildrenGeometry(collider:EllipsoidCollider, excludedObjects:Dictionary):void {
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
-				if (excludedObjects == null || !excludedObjects[child]) {
-					// Compose matrix and inverse matrix if it needed
-					if (child.transformChanged) child.composeTransforms();
-					// Calculating matrix for converting from collider coordinates to local coordinates
-					child.globalToLocalTransform.combine(child.inverseTransform, globalToLocalTransform);
-					// Check boundbox intersecting
-					var intersects:Boolean = true;
-					if (child.boundBox != null) {
-						collider.calculateSphere(child.globalToLocalTransform);
-						intersects = child.boundBox.checkSphere(collider.sphere);
-					}
-					// Adding the geometry of self content
-					if (intersects) {
-						// Calculating matrix for converting from local coordinates to callider coordinates
-						child.localToGlobalTransform.combine(localToGlobalTransform, child.transform);
-						child.collectGeometry(collider, excludedObjects);
-					}
-					// Check for children
-					if (child.childrenList != null) child.collectChildrenGeometry(collider, excludedObjects);
-				}
-			}
-		}
 
 		/**
 		 * @private

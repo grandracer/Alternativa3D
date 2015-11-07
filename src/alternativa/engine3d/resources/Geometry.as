@@ -18,14 +18,16 @@ package alternativa.engine3d.resources {
 	import alternativa.engine3d.core.VertexStream;
 
 	import flash.display3D.Context3D;
-	import flash.display3D.IndexBuffer3D;
+    import flash.display3D.Context3DBufferUsage;
+    import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
+    import flash.utils.getTimer;
 
-	use namespace alternativa3d;
+    use namespace alternativa3d;
 	/**
 	 * Resource, that stores data about geometry of object. All data are stored for each vertex.
 	 * So, you can set any set of parameters. And this set will be defined for each vertex of geometry.
@@ -87,6 +89,11 @@ package alternativa.engine3d.resources {
 
 		private var _attributesStrides:Vector.<int> = new Vector.<int>();
 		private var _unpackedPositions:Vector.<Number> = null;
+
+        private var _indexBufferContext:Context3D;
+        private var _indexBufferSize:int;
+        private var _vertexBuffersContext:Context3D;
+        public var indexBufferUsage:String = Context3DBufferUsage.STATIC_DRAW;
 
 		/**
 		 * Creates a new instance.
@@ -716,7 +723,7 @@ package alternativa.engine3d.resources {
 				vBuffer.buffer.uploadFromByteArray(data, 0, 0, _numVertices);
 			}
 			var numIndices:int = _indices.length;
-			_indexBuffer = context3D.createIndexBuffer(numIndices);
+			_indexBuffer = context3D.createIndexBuffer(numIndices, indexBufferUsage);
 			_indexBuffer.uploadFromVector(_indices, 0, numIndices);
 		}
 

@@ -221,9 +221,11 @@ package alternativa.engine3d.core {
                 }
 			}
 
-            for (var i:int = 0; i < contextBuffer.length; i++, usedBuffers >>= 1)
+            var unusedBuffers:int = _contextProperties.usedBuffers & ~usedBuffers;
+            _contextProperties.usedBuffers = usedBuffers;
+            for (var i:int = 0; i < contextBuffer.length; i++, unusedBuffers >>= 1)
             {
-                if (!(usedBuffers & 1))
+                if (unusedBuffers & 1)
                 {
 //                    trace('context.setVertexBufferAt', i, 'null');
                     context.setVertexBufferAt(i, null);
@@ -250,9 +252,11 @@ package alternativa.engine3d.core {
                 }
 			}
 
-            for (var i:int = 0; i < samplers.length; i++, usedSamplers >>= 1)
+            var unusedSamplers:int = _contextProperties.usedSamplers & ~usedSamplers;
+            _contextProperties.usedSamplers = usedSamplers;
+            for (var i:int = 0; i < samplers.length; i++, unusedSamplers >>= 1)
             {
-                if (!(usedSamplers & 1))
+                if (unusedSamplers & 1)
                 {
 //                    trace('context.setTextureAt', i, null);
                     context.setTextureAt(i, null);
