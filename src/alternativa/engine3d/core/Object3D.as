@@ -430,9 +430,6 @@ package alternativa.engine3d.core {
 		 */
 		alternativa3d var deltaTransformProcedure:Procedure;
 
-        public var previousRenderCallId:int = 0;
-        public var currentRenderCallId:int = 0;
-
 		/**
 		 * X coordinate.
 		 */
@@ -715,6 +712,7 @@ package alternativa.engine3d.core {
 		}
 
 		private static var _storeConcatenatedMatrix$buffer:Vector.<Number> = new Vector.<Number>(16, true);
+        public var meshMergerLastRenderCallId:int;
 		public function storeConcatenatedMatrix(result:Matrix3D):void {
 			if (transformChanged) composeTransforms();
 			trm.copy(transform);
@@ -1628,8 +1626,7 @@ package alternativa.engine3d.core {
 		 * @private
 		 */
 		alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
-            previousRenderCallId = currentRenderCallId;
-            currentRenderCallId = camera.renderCallId;
+            meshMergerLastRenderCallId = camera.renderCallId;
 		}
 
 		/**

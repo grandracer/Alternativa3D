@@ -23,7 +23,8 @@ package alternativa.engine3d.objects {
 		public var material:Material;
 		public var indexBegin:int = 0;
 		public var numTriangles:int = 0;
-        public var visible:Boolean = true;
+        public var meshMergerIsVisible:Boolean = true;
+        public var meshMergerInBuffer:Boolean;
 
 		alternativa3d var object:Object3D;
 
@@ -33,7 +34,7 @@ package alternativa.engine3d.objects {
 			res.material = material;
 			res.indexBegin = indexBegin;
 			res.numTriangles = numTriangles;
-            res.visible = visible;
+            res.meshMergerIsVisible = meshMergerIsVisible;
 			return res;
 		}
 	}

@@ -94,6 +94,7 @@ package alternativa.engine3d.resources {
         private var _indexBufferSize:int;
         private var _vertexBuffersContext:Context3D;
         public var indexBufferUsage:String = Context3DBufferUsage.STATIC_DRAW;
+        public var indicesArray:ByteArray;
 
 		/**
 		 * Creates a new instance.
@@ -708,9 +709,7 @@ package alternativa.engine3d.resources {
 					}
 				}
 			}
-			if (_indices.length <= 0 || _numVertices <= 0) {
-				return;
-			}
+			if (indicesArray == null && _indices.length <= 0 || _numVertices <= 0) return;
 
 			for (i = 0; i < numBuffers; i++) {
 				vBuffer = _vertexStreams[i];
@@ -722,9 +721,18 @@ package alternativa.engine3d.resources {
 				vBuffer.buffer = context3D.createVertexBuffer(_numVertices, numMappings);
 				vBuffer.buffer.uploadFromByteArray(data, 0, 0, _numVertices);
 			}
-			var numIndices:int = _indices.length;
-			_indexBuffer = context3D.createIndexBuffer(numIndices, indexBufferUsage);
-			_indexBuffer.uploadFromVector(_indices, 0, numIndices);
+            if (indicesArray != null)
+            {
+                var numIndices:int = indicesArray.length / 2;
+                _indexBuffer = context3D.createIndexBuffer(numIndices, indexBufferUsage);
+                _indexBuffer.uploadFromByteArray(indicesArray, 0, 0, numIndices);
+            }
+            else
+            {
+                var numIndices:int = _indices.length;
+                _indexBuffer = context3D.createIndexBuffer(numIndices, indexBufferUsage);
+                _indexBuffer.uploadFromVector(_indices, 0, numIndices);
+            }
 		}
 
 		/**
