@@ -56,8 +56,8 @@ package alternativa.engine3d.utils {
 				if (object.transformChanged) object.composeTransforms();
 				toRootTransform.copy(object.transform);
 				var root:Object3D = object;
-				while (root._parent != null) {
-					root = root._parent;
+				while (root.parent != null) {
+					root = root.parent;
 					if (root.transformChanged) root.composeTransforms();
 					toRootTransform.append(root.transform);
 					if (root == boundBoxSpace) {
@@ -71,8 +71,8 @@ package alternativa.engine3d.utils {
 					if (boundBoxSpace.transformChanged) boundBoxSpace.composeTransforms();
 					fromRootTransform.copy(boundBoxSpace.inverseTransform);
 					root = boundBoxSpace;
-					while (root._parent != null) {
-						root = root._parent;
+					while (root.parent != null) {
+						root = root.parent;
 						if (root.transformChanged) root.composeTransforms();
 						fromRootTransform.prepend(root.inverseTransform);
 					}

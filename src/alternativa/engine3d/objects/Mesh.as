@@ -15,7 +15,6 @@ package alternativa.engine3d.objects {
 	import alternativa.engine3d.core.Object3D;
     import alternativa.engine3d.core.RayIntersectionContext;
     import alternativa.engine3d.core.RayIntersectionData;
-	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.materials.Material;
 	import alternativa.engine3d.resources.Geometry;
 

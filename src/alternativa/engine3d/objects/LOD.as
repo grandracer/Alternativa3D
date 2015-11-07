@@ -50,16 +50,16 @@ package alternativa.engine3d.objects {
 			// Checking for the errors.
 			if (level == null) throw new TypeError("Parameter level must be non-null.");
 			if (level == this) throw new ArgumentError("An object cannot be added as a child of itself.");
-			for (var container:Object3D = _parent; container != null; container = container._parent) {
+			for (var container:Object3D = parent; container != null; container = container.parent) {
 				if (container == level) throw new ArgumentError("An object cannot be added as a child to one of it's children (or children's children, etc.).");
 			}
 			// Add.
-			if (level._parent != this) {
+			if (level.parent != this) {
 				// Remove from previous parent.
-				if (level._parent != null) level._parent.removeChild(level);
+				if (level.parent != null) level.parent.removeChild(level);
 				// Add
 				addToLevelList(level, distance);
-				level._parent = this;
+				level.parent = this;
 				// Dispatch of event.
 				if (level.willTrigger(Event3D.ADDED)) level.dispatchEvent(new Event3D(Event3D.ADDED, true));
 			} else {
@@ -80,12 +80,12 @@ package alternativa.engine3d.objects {
 		public function removeLevel(level:Object3D):Object3D {
 			// Checking for the errors.
 			if (level == null) throw new TypeError("Parameter level must be non-null.");
-			if (level._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (level.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			level = removeFromLevelList(level);
 			if (level == null) throw new ArgumentError("Cannot remove level.");
 			// Dispatch of event.
 			if (level.willTrigger(Event3D.REMOVED)) level.dispatchEvent(new Event3D(Event3D.REMOVED, true));
-			level._parent = null;
+			level.parent = null;
 			return level;
 		}
 
@@ -97,7 +97,7 @@ package alternativa.engine3d.objects {
 		public function getLevelDistance(level:Object3D):Number {
 			// Checking for the errors
 			if (level == null) throw new TypeError("Parameter level must be non-null.");
-			if (level._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (level.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			for (var current:Object3D = levelList; current != null; current = current.next) {
 				if (level == current) return level.distance;
 			}
@@ -112,7 +112,7 @@ package alternativa.engine3d.objects {
 		public function setLevelDistance(level:Object3D, distance:Number):void {
 			// Checking for the errors.
 			if (level == null) throw new TypeError("Parameter level must be non-null.");
-			if (level._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (level.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			level = removeFromLevelList(level);
 			if (level == null) throw new ArgumentError("Cannot set level distance.");
 			addToLevelList(level, distance);
@@ -380,7 +380,7 @@ package alternativa.engine3d.objects {
 					levelList = newLevel;
 				}
 				last = newLevel;
-				newLevel._parent = this;
+				newLevel.parent = this;
 				newLevel.distance = current.distance;
 			}
 		}

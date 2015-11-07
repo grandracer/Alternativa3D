@@ -330,10 +330,7 @@ package alternativa.engine3d.core {
 		 */
 		alternativa3d var _scaleZ:Number = 1;
 
-		/**
-		 * @private
-		 */
-		alternativa3d var _parent:Object3D;
+		public var parent:Object3D; // read-only
 
 		/**
 		 * @private
@@ -1032,7 +1029,7 @@ package alternativa.engine3d.core {
 		 * @return A value of true if a listener of the specified type will be triggered; false otherwise.
 		 */
 		public function willTrigger(type:String):Boolean {
-			for (var object:Object3D = this; object != null; object = object._parent) {
+			for (var object:Object3D = this; object != null; object = object.parent) {
 				if (object.captureListeners != null && object.captureListeners[type] || object.bubbleListeners != null && object.bubbleListeners[type]) return true;
 			}
 			return false;
@@ -1058,7 +1055,7 @@ package alternativa.engine3d.core {
 			var length:int;
 			var vector:Vector.<Function>;
 			var functions:Vector.<Function>;
-			for (object = this; object != null; object = object._parent) {
+			for (object = this; object != null; object = object.parent) {
 				branch[branchLength] = object;
 				branchLength++;
 			}
@@ -1107,19 +1104,12 @@ package alternativa.engine3d.core {
 		}
 
 		/**
-		 * <code>Object3D</code>, to which this object was added as a child.
-		 */
-		public function get parent():Object3D {
-			return _parent;
-		}
-
-		/**
 		 * @private
 		 */
 		alternativa3d function removeFromParent():void {
-			if (_parent != null) {
-				_parent.removeFromList(this);
-				_parent = null;
+			if (parent != null) {
+				parent.removeFromList(this);
+				parent = null;
 			}
 		}
 
@@ -1133,16 +1123,16 @@ package alternativa.engine3d.core {
 			// Error checking
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
 			if (child == this) throw new ArgumentError("An object cannot be added as a child of itself.");
-			for (var container:Object3D = _parent; container != null; container = container._parent) {
+			for (var container:Object3D = parent; container != null; container = container.parent) {
 				if (container == child) throw new ArgumentError("An object cannot be added as a child to one of it's children (or children's children, etc.).");
 			}
 			// Adding
-			if (child._parent != this) {
+			if (child.parent != this) {
 				// Removing from old place
-				if (child._parent != null) child._parent.removeChild(child);
+				if (child.parent != null) child.parent.removeChild(child);
 				// Adding
 				addToList(child);
-				child._parent = this;
+				child.parent = this;
 				// Dispatching the event
 				if (child.willTrigger(Event3D.ADDED)) child.dispatchEvent(new Event3D(Event3D.ADDED, true));
 			} else {
@@ -1164,12 +1154,12 @@ package alternativa.engine3d.core {
 		public function removeChild(child:Object3D):Object3D {
 			// Error checking
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			child = removeFromList(child);
 			if (child == null) throw new ArgumentError("Cannot remove child.");
 			// Dispatching the event
 			if (child.willTrigger(Event3D.REMOVED)) child.dispatchEvent(new Event3D(Event3D.REMOVED, true));
-			child._parent = null;
+			child.parent = null;
 			return child;
 		}
 
@@ -1184,7 +1174,7 @@ package alternativa.engine3d.core {
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
 			if (child == this) throw new ArgumentError("An object cannot be added as a child of itself.");
 			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
-			for (var container:Object3D = _parent; container != null; container = container._parent) {
+			for (var container:Object3D = parent; container != null; container = container.parent) {
 				if (container == child) throw new ArgumentError("An object cannot be added as a child to one of it's children (or children's children, etc.).");
 			}
 			// Search for element by index
@@ -1194,12 +1184,12 @@ package alternativa.engine3d.core {
 				current = current.next;
 			}
 			// Adding
-			if (child._parent != this) {
+			if (child.parent != this) {
 				// Removing from old parent
-				if (child._parent != null) child._parent.removeChild(child);
+				if (child.parent != null) child.parent.removeChild(child);
 				// Adding
 				addToList(child, current);
-				child._parent = this;
+				child.parent = this;
 				// Dispatching the event
 				if (child.willTrigger(Event3D.ADDED)) child.dispatchEvent(new Event3D(Event3D.ADDED, true));
 			} else {
@@ -1232,7 +1222,7 @@ package alternativa.engine3d.core {
 			removeFromList(child);
 			// Dispatching the event
 			if (child.willTrigger(Event3D.REMOVED)) child.dispatchEvent(new Event3D(Event3D.REMOVED, true));
-			child._parent = null;
+			child.parent = null;
 			return child;
 		}
 
@@ -1286,7 +1276,7 @@ package alternativa.engine3d.core {
 				var next:Object3D = begin.next;
 				begin.next = null;
 				if (begin.willTrigger(Event3D.REMOVED)) begin.dispatchEvent(new Event3D(Event3D.REMOVED, true));
-				begin._parent = null;
+				begin.parent = null;
 				begin = next;
 			}
 		}
@@ -1317,7 +1307,7 @@ package alternativa.engine3d.core {
 		public function getChildIndex(child:Object3D):int {
 			// Error checking
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			// Search for index
 			var index:int = 0;
 			for (var current:Object3D = childrenList; current != null; current = current.next) {
@@ -1335,7 +1325,7 @@ package alternativa.engine3d.core {
 		public function setChildIndex(child:Object3D, index:int):void {
 			// Error checking
 			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
 			// Search for element by index
 			var current:Object3D = childrenList;
@@ -1358,7 +1348,7 @@ package alternativa.engine3d.core {
 		public function swapChildren(child1:Object3D, child2:Object3D):void {
 			// Error checking
 			if (child1 == null || child2 == null) throw new TypeError("Parameter child must be non-null.");
-			if (child1._parent != this || child2._parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
+			if (child1.parent != this || child2.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
 			// Swapping
 			if (child1 != child2) {
 				if (child1.next == child2) {
@@ -1640,7 +1630,7 @@ package alternativa.engine3d.core {
 				// Checking visibility flag
 				if (child.visible) {
 					// Check getting in frustum and occluding
-					if (child.culling >= 0 && (child.boundBox == null || camera.occludersLength == 0 || !child.boundBox.checkOcclusion(camera.occluders, camera.occludersLength, child.localToCameraTransform))) {
+					if (child.culling >= 0) {
 						// Check if the ray crossing the bounding box
 						if (child.boundBox != null) {
 							camera.calculateRays(child.cameraToLocalTransform);
@@ -1819,7 +1809,7 @@ package alternativa.engine3d.core {
 					childrenList = newChild;
 				}
 				lastChild = newChild;
-				newChild._parent = this;
+				newChild.parent = this;
 			}
 		}
 

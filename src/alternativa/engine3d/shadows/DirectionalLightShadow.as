@@ -262,10 +262,10 @@ package alternativa.engine3d.shadows {
 				object = _casters[i];
 
 				var visible:Boolean = object.visible;
-				var parent:Object3D = object._parent;
+				var parent:Object3D = object.parent;
 				while (visible && parent != null) {
 					visible = parent.visible;
-					parent = parent._parent;
+					parent = parent.parent;
 				}
 				if (visible) {
 					actualCasters[numActualCasters++] = object;

@@ -159,15 +159,6 @@ public class Camera3D extends Object3D {
 
 	/**
 	 * @private
-	 */
-	alternativa3d var occluders:Vector.<Occluder> = new Vector.<Occluder>();
-	/**
-	 * @private
-	 */
-	alternativa3d var occludersLength:int = 0;
-
-	/**
-	 * @private
 	 * <code>Context3D</code> which is used for rendering.
 	 */
 	alternativa3d var context3D:Context3D;
@@ -220,14 +211,12 @@ public class Camera3D extends Object3D {
 		var i:int;
 		var j:int;
 		var light:Light3D;
-		var occluder:Occluder;
 		// Error checking
 		if (stage3D == null) throw new TypeError("Parameter stage3D must be non-null.");
 		// Reset the counters
 		numDraws = 0;
 		numTriangles = 0;
-		// Reset the occluders
-		occludersLength = 0;
+
 		// Reset the lights
 		lightsLength = 0;
         renderCallId++;
@@ -281,7 +270,7 @@ public class Camera3D extends Object3D {
 				globalMouseHandlingType = root.mouseHandlingType;
 				// Checking the culling
 				if (root.boundBox != null) {
-					calculateFrustum(root.cameraToLocalTransform);
+                    calculateFrustum(root.cameraToLocalTransform);
 					root.culling = root.boundBox.checkFrustumCulling(frustum, 63);
 				} else {
 					root.culling = 63;
@@ -290,65 +279,24 @@ public class Camera3D extends Object3D {
 				if (root.culling >= 0) root.calculateVisibility(this);
 				// Calculations  visibility of children
 				root.calculateChildrenVisibility(this);
-				// Calculations of transformations from occluder space to the camera space
-				for (i = 0; i < occludersLength; i++) {
-					occluder = occluders[i];
-					occluder.localToCameraTransform.calculateInversion(occluder.cameraToLocalTransform);
-					occluder.transformVertices(correctionX, correctionY);
-					occluder.distance = orthographic ? occluder.localToCameraTransform.l : (occluder.localToCameraTransform.d * occluder.localToCameraTransform.d + occluder.localToCameraTransform.h * occluder.localToCameraTransform.h + occluder.localToCameraTransform.l * occluder.localToCameraTransform.l);
-					occluder.enabled = true;
-				}
-				// Sorting the occluders by disance
-				if (occludersLength > 1) sortOccluders();
-				// Constructing the volumes of occluders, their intersections, starts from closest
-				for (i = 0; i < occludersLength; i++) {
-					occluder = occluders[i];
-					if (occluder.enabled) {
-						occluder.calculatePlanes(this);
-						if (occluder.planeList != null) {
-							for (j = i + 1; j < occludersLength; j++) { // It is possible, that start value should be 0
-								var compared:Occluder = occluders[j];
-								if (compared.enabled && compared != occluder && compared.checkOcclusion(occluder, correctionX, correctionY)) compared.enabled = false;
-							}
-						} else {
-							occluder.enabled = false;
-						}
-					}
-					// Reset of culling
-					occluder.culling = -1;
-				}
-				//  Gather the occluders which will affects now
-				for (i = 0, j = 0; i < occludersLength; i++) {
-					occluder = occluders[i];
-					if (occluder.enabled) {
-						// Debug
-						occluder.collectDraws(this, null, 0, false);
-						if (debug && occluder.boundBox != null && (checkInDebug(occluder) & Debug.BOUNDS)) Debug.drawBoundBox(this, occluder.boundBox, occluder.localToCameraTransform);
-						occluders[j] = occluder;
-						j++;
-					}
-				}
-				occludersLength = j;
-				occluders.length = j;
+
 				// Check light influence
 				for (i = 0, j = 0; i < lightsLength; i++) {
 					light = lights[i];
 					light.localToCameraTransform.calculateInversion(light.cameraToLocalTransform);
-					if (light.boundBox == null || occludersLength == 0 || !light.boundBox.checkOcclusion(occluders, occludersLength, light.localToCameraTransform)) {
-						light.red = ((light.color >> 16) & 0xFF) * light.intensity / 255;
-						light.green = ((light.color >> 8) & 0xFF) * light.intensity / 255;
-						light.blue = (light.color & 0xFF) * light.intensity / 255;
-						// Debug
-						light.collectDraws(this, null, 0, false);
-						if (debug && light.boundBox != null && (checkInDebug(light) & Debug.BOUNDS)) Debug.drawBoundBox(this, light.boundBox, light.localToCameraTransform);
+                    light.red = ((light.color >> 16) & 0xFF) * light.intensity / 255;
+                    light.green = ((light.color >> 8) & 0xFF) * light.intensity / 255;
+                    light.blue = (light.color & 0xFF) * light.intensity / 255;
+                    // Debug
+                    light.collectDraws(this, null, 0, false);
+                    if (debug && light.boundBox != null && (checkInDebug(light) & Debug.BOUNDS)) Debug.drawBoundBox(this, light.boundBox, light.localToCameraTransform);
 
-						// Shadows preparing
-						if (light.shadow != null) {
-							light.shadow.process(this);
-						}
-						lights[j] = light;
-						j++;
-					}
+                    // Shadows preparing
+                    if (light.shadow != null) {
+                        light.shadow.process(this);
+                    }
+                    lights[j] = light;
+                    j++;
 					light.culling = -1;
 				}
 				lightsLength = j;
@@ -382,7 +330,7 @@ public class Camera3D extends Object3D {
 				}
 
 				// Check getting in frustum and occluding
-				if (root.culling >= 0 && (root.boundBox == null || occludersLength == 0 || !root.boundBox.checkOcclusion(occluders, occludersLength, root.localToCameraTransform))) {
+				if (root.culling >= 0 && root.boundBox == null) {
 					// Check if the ray crossing the bounding box
 					if (globalMouseHandlingType > 0 && root.boundBox != null) {
 						calculateRays(root.cameraToLocalTransform);
@@ -453,8 +401,13 @@ public class Camera3D extends Object3D {
 		// Clearing
 		lights.length = 0;
 		childLights.length = 0;
-		occluders.length = 0;
 	}
+
+    public function calculateFrustum(transform:Transform3D):void
+    {
+        if (orthographic) AlternativaUtils.calculateFrustumOrthographic(frustum, view._width, view._height, nearClipping, farClipping, transform);
+        else AlternativaUtils.calculateFrustumPerspective(frustum, correctionX, correctionY, nearClipping, farClipping, transform);
+    }
 
 	/**
 	 * Setup Camera3D position using x, y, z coordinates
@@ -593,108 +546,7 @@ public class Camera3D extends Object3D {
 	/**
 	 * @private
 	 */
-	alternativa3d function calculateFrustum(transform:Transform3D):void {
-		var nearPlane:CullingPlane = frustum;
-		var farPlane:CullingPlane = nearPlane.next;
-		var leftPlane:CullingPlane = farPlane.next;
-		var rightPlane:CullingPlane = leftPlane.next;
-		var topPlane:CullingPlane = rightPlane.next;
-		var bottomPlane:CullingPlane = topPlane.next;
-		if (!orthographic) {
-			var fa:Number = transform.a * correctionX;
-			var fe:Number = transform.e * correctionX;
-			var fi:Number = transform.i * correctionX;
-			var fb:Number = transform.b * correctionY;
-			var ff:Number = transform.f * correctionY;
-			var fj:Number = transform.j * correctionY;
-			nearPlane.x = fj * fe - ff * fi;
-			nearPlane.y = fb * fi - fj * fa;
-			nearPlane.z = ff * fa - fb * fe;
-			nearPlane.offset = (transform.d + transform.c * nearClipping) * nearPlane.x + (transform.h + transform.g * nearClipping) * nearPlane.y + (transform.l + transform.k * nearClipping) * nearPlane.z;
 
-			farPlane.x = -nearPlane.x;
-			farPlane.y = -nearPlane.y;
-			farPlane.z = -nearPlane.z;
-			farPlane.offset = (transform.d + transform.c * farClipping) * farPlane.x + (transform.h + transform.g * farClipping) * farPlane.y + (transform.l + transform.k * farClipping) * farPlane.z;
-
-			var ax:Number = -fa - fb + transform.c;
-			var ay:Number = -fe - ff + transform.g;
-			var az:Number = -fi - fj + transform.k;
-			var bx:Number = fa - fb + transform.c;
-			var by:Number = fe - ff + transform.g;
-			var bz:Number = fi - fj + transform.k;
-			topPlane.x = bz * ay - by * az;
-			topPlane.y = bx * az - bz * ax;
-			topPlane.z = by * ax - bx * ay;
-			topPlane.offset = transform.d * topPlane.x + transform.h * topPlane.y + transform.l * topPlane.z;
-				// Right plane.
-			ax = bx;
-			ay = by;
-			az = bz;
-			bx = fa + fb + transform.c;
-			by = fe + ff + transform.g;
-			bz = fi + fj + transform.k;
-			rightPlane.x = bz * ay - by * az;
-			rightPlane.y = bx * az - bz * ax;
-			rightPlane.z = by * ax - bx * ay;
-			rightPlane.offset = transform.d * rightPlane.x + transform.h * rightPlane.y + transform.l * rightPlane.z;
-				// Bottom plane.
-				ax = bx;
-				ay = by;
-				az = bz;
-				bx = -fa + fb + transform.c;
-				by = -fe + ff + transform.g;
-				bz = -fi + fj + transform.k;
-				bottomPlane.x = bz*ay - by*az;
-				bottomPlane.y = bx*az - bz*ax;
-				bottomPlane.z = by*ax - bx*ay;
-				bottomPlane.offset = transform.d*bottomPlane.x + transform.h*bottomPlane.y + transform.l*bottomPlane.z;
-				// Left plane.
-				ax = bx;
-				ay = by;
-				az = bz;
-				bx = -fa - fb + transform.c;
-				by = -fe - ff + transform.g;
-				bz = -fi - fj + transform.k;
-				leftPlane.x = bz*ay - by*az;
-				leftPlane.y = bx*az - bz*ax;
-				leftPlane.z = by*ax - bx*ay;
-				leftPlane.offset = transform.d*leftPlane.x + transform.h*leftPlane.y + transform.l*leftPlane.z;
-			} else {
-				var viewSizeX:Number = view._width*0.5;
-				var viewSizeY:Number = view._height*0.5;
-				// Near plane.
-				nearPlane.x = transform.j*transform.e - transform.f*transform.i;
-				nearPlane.y = transform.b*transform.i - transform.j*transform.a;
-				nearPlane.z = transform.f*transform.a - transform.b*transform.e;
-				nearPlane.offset = (transform.d + transform.c*nearClipping)*nearPlane.x + (transform.h + transform.g*nearClipping)*nearPlane.y + (transform.l + transform.k*nearClipping)*nearPlane.z;
-				// Far plane.
-				farPlane.x = -nearPlane.x;
-				farPlane.y = -nearPlane.y;
-				farPlane.z = -nearPlane.z;
-				farPlane.offset = (transform.d + transform.c*farClipping)*farPlane.x + (transform.h + transform.g*farClipping)*farPlane.y + (transform.l + transform.k*farClipping)*farPlane.z;
-				// Top plane.
-				topPlane.x = transform.i*transform.g - transform.e*transform.k;
-				topPlane.y = transform.a*transform.k - transform.i*transform.c;
-				topPlane.z = transform.e*transform.c - transform.a*transform.g;
-				topPlane.offset = (transform.d - transform.b*viewSizeY)*topPlane.x + (transform.h - transform.f*viewSizeY)*topPlane.y + (transform.l - transform.j*viewSizeY)*topPlane.z;
-				// Bottom plane.
-				bottomPlane.x = -topPlane.x;
-				bottomPlane.y = -topPlane.y;
-				bottomPlane.z = -topPlane.z;
-				bottomPlane.offset = (transform.d + transform.b*viewSizeY)*bottomPlane.x + (transform.h + transform.f*viewSizeY)*bottomPlane.y + (transform.l + transform.j*viewSizeY)*bottomPlane.z;
-				// Left plane.
-				leftPlane.x = transform.k*transform.f - transform.g*transform.j;
-				leftPlane.y = transform.c*transform.j - transform.k*transform.b;
-				leftPlane.z = transform.g*transform.b - transform.c*transform.f;
-				leftPlane.offset = (transform.d - transform.a*viewSizeX)*leftPlane.x + (transform.h - transform.e*viewSizeX)*leftPlane.y + (transform.l - transform.i*viewSizeX)*leftPlane.z;
-				// Right plane.
-				rightPlane.x = -leftPlane.x;
-				rightPlane.y = -leftPlane.y;
-				rightPlane.z = -leftPlane.z;
-				rightPlane.offset = (transform.d + transform.a*viewSizeX)*rightPlane.x + (transform.h + transform.e*viewSizeX)*rightPlane.y + (transform.l + transform.i*viewSizeX)*rightPlane.z;
-		}
-	}
 
 	/**
 	 * @private
@@ -716,52 +568,6 @@ public class Camera3D extends Object3D {
 	}
 
 	static private const stack:Vector.<int> = new Vector.<int>();
-
-	private function sortOccluders():void {
-		stack[0] = 0;
-		stack[1] = occludersLength - 1;
-		var index:int = 2;
-		while (index > 0) {
-			index--;
-			var r:int = stack[index];
-			var j:int = r;
-			index--;
-			var l:int = stack[index];
-			var i:int = l;
-			var occluder:Occluder = occluders[(r + l) >> 1];
-			var median:Number = occluder.distance;
-			while (i <= j) {
-				var left:Occluder = occluders[i];
-				while (left.distance < median) {
-					i++;
-					left = occluders[i];
-				}
-				var right:Occluder = occluders[j];
-				while (right.distance > median) {
-					j--;
-					right = occluders[j];
-				}
-				if (i <= j) {
-					occluders[i] = right;
-					occluders[j] = left;
-					i++;
-					j--;
-				}
-			}
-			if (l < j) {
-				stack[index] = l;
-				index++;
-				stack[index] = j;
-				index++;
-			}
-			if (i < r) {
-				stack[index] = i;
-				index++;
-				stack[index] = r;
-				index++;
-			}
-		}
-	}
 
 	// DEBUG
 

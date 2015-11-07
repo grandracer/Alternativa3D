@@ -9,10 +9,8 @@
 package alternativa.engine3d.lights {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.Transform3D;
 
 	use namespace alternativa3d;
 
@@ -65,131 +63,9 @@ package alternativa.engine3d.lights {
 		/**
 		 * @private
 		 */
-		override alternativa3d function checkBound(targetObject:Object3D):Boolean {
-			var rScale:Number = Math.sqrt(lightToObjectTransform.a*lightToObjectTransform.a + lightToObjectTransform.e*lightToObjectTransform.e + lightToObjectTransform.i*lightToObjectTransform.i);
-			rScale += Math.sqrt(lightToObjectTransform.b*lightToObjectTransform.b + lightToObjectTransform.f*lightToObjectTransform.f + lightToObjectTransform.j*lightToObjectTransform.j);
-			rScale += Math.sqrt(lightToObjectTransform.c*lightToObjectTransform.c + lightToObjectTransform.g*lightToObjectTransform.g + lightToObjectTransform.k*lightToObjectTransform.k);
-			rScale /= 3;
-			rScale *= attenuationEnd;
-			rScale *= rScale;
-			var len:Number = 0;
-			var bb:BoundBox = targetObject.boundBox;
-			var minX:Number = bb.minX;
-			var minY:Number = bb.minY;
-			var minZ:Number = bb.minZ;
-			var maxX:Number = bb.maxX;
-			var px:Number = lightToObjectTransform.d;
-			var py:Number = lightToObjectTransform.h;
-			var pz:Number = lightToObjectTransform.l;
-
-			var maxY:Number = bb.maxY;
-			var maxZ:Number = bb.maxZ;
-			if (px < minX) {
-				if (py < minY) {
-					if (pz < minZ) {
-						len = (minX - px)*(minX - px) + (minY - py)*(minY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (minX - px)*(minX - px) + (minY - py)*(minY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (minX - px)*(minX - px) + (minY - py)*(minY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py < maxY) {
-					if (pz < minZ) {
-						len = (minX - px)*(minX - px) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (minX - px)*(minX - px);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (minX - px)*(minX - px) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py > maxY) {
-					if (pz < minZ) {
-						len = (minX - px)*(minX - px) + (maxY - py)*(maxY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (minX - px)*(minX - px) + (maxY - py)*(maxY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (minX - px)*(minX - px) + (maxY - py)*(maxY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				}
-			} else if (px < maxX) {
-				if (py < minY) {
-					if (pz < minZ) {
-						len = (minY - py)*(minY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (minY - py)*(minY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (minY - py)*(minY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py < maxY) {
-					if (pz < minZ) {
-						len = (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						return true;
-					} else if (pz > maxZ) {
-						len = (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py > maxY) {
-					if (pz < minZ) {
-						len = (maxY - py)*(maxY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (maxY - py)*(maxY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (maxY - py)*(maxY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				}
-			} else if (px > maxX) {
-				if (py < minY) {
-					if (pz < minZ) {
-						len = (maxX - px)*(maxX - px) + (minY - py)*(minY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (maxX - px)*(maxX - px) + (minY - py)*(minY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (maxX - px)*(maxX - px) + (minY - py)*(minY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py < maxY) {
-					if (pz < minZ) {
-						len = (maxX - px)*(maxX - px) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (maxX - px)*(maxX - px);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (maxX - px)*(maxX - px) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				} else if (py > maxY) {
-					if (pz < minZ) {
-						len = (maxX - px)*(maxX - px) + (maxY - py)*(maxY - py) + (minZ - pz)*(minZ - pz);
-						return len < rScale;
-					} else if (pz < maxZ) {
-						len = (maxX - px)*(maxX - px) + (maxY - py)*(maxY - py);
-						return len < rScale;
-					} else if (pz > maxZ) {
-						len = (maxX - px)*(maxX - px) + (maxY - py)*(maxY - py) + (maxZ - pz)*(maxZ - pz);
-						return len < rScale;
-					}
-				}
-			}
-			return true;
+		override alternativa3d function checkBound(targetObject:Object3D):Boolean
+        {
+			return AlternativaUtils.checkOmniLightBound(lightToObjectTransform, attenuationEnd, targetObject.boundBox);
 		}
 
 		/**

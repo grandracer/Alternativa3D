@@ -1039,7 +1039,7 @@ package alternativa.engine3d.core {
 			while (object != null) {
 				vector[len] = object;
 				len++;
-				object = object._parent;
+				object = object.parent;
 			}
 			vector.length = len;
 			return vector;
@@ -1131,14 +1131,14 @@ package alternativa.engine3d.core {
 				var potentialTarget:Object3D = null;
 				var obj:Object3D;
 				// Get possible target
-				for (obj = object; obj != null; obj = obj._parent) {
+				for (obj = object; obj != null; obj = obj.parent) {
 					if (!obj.mouseChildren) potentialTarget = null;
 					if (potentialTarget == null && obj.mouseEnabled) potentialTarget = obj;
 				}
 				// If possible target found
 				if (potentialTarget != null) {
 					if (target != null) {
-						for (obj = potentialTarget; obj != null; obj = obj._parent) {
+						for (obj = potentialTarget; obj != null; obj = obj.parent) {
 							if (obj == target) {
 								source = object;
 								if (target != potentialTarget) {

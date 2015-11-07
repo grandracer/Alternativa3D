@@ -241,10 +241,10 @@ package alternativa.engine3d.shadows {
 				caster = _casters[i];
 
 				var visible:Boolean = caster.visible;
-				var parent:Object3D = caster._parent;
+				var parent:Object3D = caster.parent;
 				while (visible && parent != null) {
 					visible = parent.visible;
-					parent = parent._parent;
+					parent = parent.parent;
 				}
 
 				if (visible) {

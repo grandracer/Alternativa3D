@@ -9,10 +9,8 @@
 package alternativa.engine3d.lights {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
-	import alternativa.engine3d.core.Transform3D;
 
 	use namespace alternativa3d;
 
@@ -89,112 +87,9 @@ package alternativa.engine3d.lights {
 			rotationZ = -Math.atan2(dx, dy);
 		}
 		
-		/**
-		 * @private 
-		 */
-		override alternativa3d function checkBound(targetObject:Object3D):Boolean {
-			var minX:Number = boundBox.minX;
-			var minY:Number = boundBox.minY;
-			var minZ:Number = boundBox.minZ;
-			var maxX:Number = boundBox.maxX;
-			var maxY:Number = boundBox.maxY;
-			var maxZ:Number = boundBox.maxZ;
-			var sum:Number;
-			var pro:Number;
-			// Half sizes of the source's boundbox
-			var w:Number = (maxX - minX)*0.5;
-			var l:Number = (maxY - minY)*0.5;
-			var h:Number = (maxZ - minZ)*0.5;
-			// Half-vectors of the source's boundbox
-			var ax:Number = lightToObjectTransform.a*w;
-			var ay:Number = lightToObjectTransform.e*w;
-			var az:Number = lightToObjectTransform.i*w;
-			var bx:Number = lightToObjectTransform.b*l;
-			var by:Number = lightToObjectTransform.f*l;
-			var bz:Number = lightToObjectTransform.j*l;
-			var cx:Number = lightToObjectTransform.c*h;
-			var cy:Number = lightToObjectTransform.g*h;
-			var cz:Number = lightToObjectTransform.k*h;
-			// Half sizes of the boundboxes
-			var objectBB:BoundBox = targetObject.boundBox;
-			var hw:Number = (objectBB.maxX - objectBB.minX)*0.5;
-			var hl:Number = (objectBB.maxY - objectBB.minY)*0.5;
-			var hh:Number = (objectBB.maxZ - objectBB.minZ)*0.5;
-			// Vector between centers of the bounboxes
-			var dx:Number = lightToObjectTransform.a*(minX + w) + lightToObjectTransform.b*(minY + l) + lightToObjectTransform.c*(minZ + h) + lightToObjectTransform.d - objectBB.minX - hw;
-			var dy:Number = lightToObjectTransform.e*(minX + w) + lightToObjectTransform.f*(minY + l) + lightToObjectTransform.g*(minZ + h) + lightToObjectTransform.h - objectBB.minY - hl;
-			var dz:Number = lightToObjectTransform.i*(minX + w) + lightToObjectTransform.j*(minY + l) + lightToObjectTransform.k*(minZ + h) + lightToObjectTransform.l - objectBB.minZ - hh;
-
-			// X of the object
-			sum = 0;
-			if (ax >= 0) sum += ax; else sum -= ax;
-			if (bx >= 0) sum += bx; else sum -= bx;
-			if (cx >= 0) sum += cx; else sum -= cx;
-			sum += hw;
-			if (dx >= 0) sum -= dx;
-			sum += dx;
-			if (sum <= 0) return false;
-			// Y of the object
-			sum = 0;
-			if (ay >= 0) sum += ay; else sum -= ay;
-			if (by >= 0) sum += by; else sum -= by;
-			if (cy >= 0) sum += cy; else sum -= cy;
-			sum += hl;
-			if (dy >= 0) sum -= dy; else sum += dy;
-			if (sum <= 0) return false;
-			// Z of the object
-			sum = 0;
-			if (az >= 0) sum += az; else sum -= az;
-			if (bz >= 0) sum += bz; else sum -= bz;
-			if (cz >= 0) sum += cz; else sum -= cz;
-			sum += hl;
-			if (dz >= 0) sum -= dz; else sum += dz;
-			if (sum <= 0) return false;
-			// X of the source
-			sum = 0;
-			pro = lightToObjectTransform.a*ax + lightToObjectTransform.e*ay + lightToObjectTransform.i*az;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.a*bx + lightToObjectTransform.e*by + lightToObjectTransform.i*bz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.a*cx + lightToObjectTransform.e*cy + lightToObjectTransform.i*cz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			if (lightToObjectTransform.a >= 0) sum += lightToObjectTransform.a*hw; else sum -= lightToObjectTransform.a*hw;
-			if (lightToObjectTransform.e >= 0) sum += lightToObjectTransform.e*hl; else sum -= lightToObjectTransform.e*hl;
-			if (lightToObjectTransform.i >= 0) sum += lightToObjectTransform.i*hh; else sum -= lightToObjectTransform.i*hh;
-			pro = lightToObjectTransform.a*dx + lightToObjectTransform.e*dy + lightToObjectTransform.i*dz;
-			if (pro >= 0) sum -= pro; else sum += pro;
-			if (sum <= 0) return false;
-			// Y of the source
-			sum = 0;
-			pro = lightToObjectTransform.b*ax + lightToObjectTransform.f*ay + lightToObjectTransform.j*az;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.b*bx + lightToObjectTransform.f*by + lightToObjectTransform.j*bz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.b*cx + lightToObjectTransform.f*cy + lightToObjectTransform.j*cz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			if (lightToObjectTransform.b >= 0) sum += lightToObjectTransform.b*hw; else sum -= lightToObjectTransform.b*hw;
-			if (lightToObjectTransform.f >= 0) sum += lightToObjectTransform.f*hl; else sum -= lightToObjectTransform.f*hl;
-			if (lightToObjectTransform.j >= 0) sum += lightToObjectTransform.j*hh; else sum -= lightToObjectTransform.j*hh;
-			pro = lightToObjectTransform.b*dx + lightToObjectTransform.f*dy + lightToObjectTransform.j*dz;
-			if (pro >= 0) sum -= pro;
-			sum += pro;
-			if (sum <= 0) return false;
-			// Z of the source
-			sum = 0;
-			pro = lightToObjectTransform.c*ax + lightToObjectTransform.g*ay + lightToObjectTransform.k*az;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.c*bx + lightToObjectTransform.g*by + lightToObjectTransform.k*bz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			pro = lightToObjectTransform.c*cx + lightToObjectTransform.g*cy + lightToObjectTransform.k*cz;
-			if (pro >= 0) sum += pro; else sum -= pro;
-			if (lightToObjectTransform.c >= 0) sum += lightToObjectTransform.c*hw; else sum -= lightToObjectTransform.c*hw;
-			if (lightToObjectTransform.g >= 0) sum += lightToObjectTransform.g*hl; else sum -= lightToObjectTransform.g*hl;
-			if (lightToObjectTransform.k >= 0) sum += lightToObjectTransform.k*hh; else sum -= lightToObjectTransform.k*hh;
-			pro = lightToObjectTransform.c*dx + lightToObjectTransform.g*dy + lightToObjectTransform.k*dz;
-			if (pro >= 0) sum -= pro; else sum += pro;
-			if (sum <= 0) return false;
-			// TODO: checking on random axises
-			return true;
+		override alternativa3d function checkBound(targetObject:Object3D):Boolean
+        {
+            return AlternativaUtils.checkSpotLightBound(lightToObjectTransform, boundBox, targetObject.boundBox);
 		}
 
 		/**
