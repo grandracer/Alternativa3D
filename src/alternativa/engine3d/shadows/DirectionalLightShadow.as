@@ -8,14 +8,12 @@
 package alternativa.engine3d.shadows {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.Debug;
 	import alternativa.engine3d.core.DrawUnit;
 	import alternativa.engine3d.core.Light3D;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.core.Renderer;
-	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.materials.Material;
 	import alternativa.engine3d.materials.ShaderProgram;
@@ -620,7 +618,8 @@ package alternativa.engine3d.shadows {
 
 				if (skin != null) {
 					// Calculation of matrices of joints.
-					for (child = skin.childrenList; child != null; child = child.next) {
+                    for each (var child:Object3D in skin.childrenList)
+                    {
 						if (child.transformChanged) child.composeTransforms();
 						// Write в localToGlobalTransform matrix of transfering to skin coordinates
 						child.localToGlobalTransform.copy(child.transform);
@@ -701,9 +700,8 @@ package alternativa.engine3d.shadows {
 					renderer.addDrawUnit(drawUnit, Renderer.OPAQUE);
 				}
 			}
-			for (child = object.childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in object.childrenList)
 				if (child.visible) collectDraws(context, child);
-			}
 		}
 
 		//------------- ShadowMap Shader ----------

@@ -8,12 +8,10 @@
 package alternativa.engine3d.shadows {
 
 	import alternativa.engine3d.alternativa3d;
-	import alternativa.engine3d.core.BoundBox;
 	import alternativa.engine3d.core.Camera3D;
 	import alternativa.engine3d.core.DrawUnit;
 	import alternativa.engine3d.core.Object3D;
 	import alternativa.engine3d.core.Renderer;
-	import alternativa.engine3d.core.Transform3D;
 	import alternativa.engine3d.core.VertexAttributes;
 	import alternativa.engine3d.lights.OmniLight;
 	import alternativa.engine3d.materials.Material;
@@ -267,11 +265,10 @@ package alternativa.engine3d.shadows {
 						}
 					}
 
-					// update Skin Joints matrices
 					var skin:Skin = caster as Skin;
 					if (skin != null) {
-						// Calculate joints matrices
-						for (var child:Object3D = skin.childrenList; child != null; child = child.next) {
+                        for each (var child:Object3D in skin.childrenList)
+                        {
 							if (child.transformChanged) child.composeTransforms();
 							// Write transformToSkin matrix to localToGlobalTransform property
 							child.localToGlobalTransform.copy(child.transform);
@@ -282,7 +279,7 @@ package alternativa.engine3d.shadows {
 						}
 					}
 
-					if (caster.childrenList != null) collectActualChildren(caster);
+					if (caster.childrenList.length > 0) collectActualChildren(caster);
 				}
 			}
 
@@ -356,7 +353,8 @@ package alternativa.engine3d.shadows {
 		}
 
 		private function collectActualChildren(root:Object3D):void {
-			for (var child:Object3D = root.childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in root.childrenList)
+            {
 				if (child.visible) {
 					// calculate transform matrices
 					_light.lightToObjectTransform.combine(child.cameraToLocalTransform, _light.localToCameraTransform);
@@ -381,7 +379,8 @@ package alternativa.engine3d.shadows {
 					var skin:Skin = child as Skin;
 					if (skin != null) {
 						// Calculate joints matrices
-						for (var skinChild:Object3D = skin.childrenList; skinChild != null; skinChild = skinChild.next) {
+                        for each (var skinChild:Object3D in skin.childrenList)
+                        {
 							if (skinChild.transformChanged) skinChild.composeTransforms();
 							// Write transformToSkin matrix to localToGlobalTransform property
 							skinChild.localToGlobalTransform.copy(skinChild.transform);
@@ -392,7 +391,7 @@ package alternativa.engine3d.shadows {
 						}
 					}
 
-					if (child.childrenList != null) collectActualChildren(child);
+					if (child.childrenList.length > 0) collectActualChildren(child);
 				}
 			}
 		}

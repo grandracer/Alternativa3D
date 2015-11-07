@@ -69,7 +69,8 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		alternativa3d function calculateBindingMatrices():void {
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in childrenList)
+            {
 				var joint:Joint = child as Joint;
 				if (joint != null) {
 					if (joint.transformChanged) {

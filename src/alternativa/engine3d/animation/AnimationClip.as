@@ -303,9 +303,7 @@ package alternativa.engine3d.animation {
 		 * @private
 		 */
 		private function getNumChildren(object:Object):int {
-			if (object is Object3D) {
-				return Object3D(object).numChildren;
-			}
+			if (object is Object3D) return Object3D(object).childrenList.length;
 			return 0;
 		}
 
@@ -314,7 +312,7 @@ package alternativa.engine3d.animation {
 		 */
 		private function getChildAt(object:Object, index:int):Object {
 			if (object is Object3D) {
-				return Object3D(object).getChildAt(index);
+				return Object3D(object).childrenList[index];
 			}
 			return null;
 		}

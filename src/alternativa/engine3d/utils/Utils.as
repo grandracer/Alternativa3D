@@ -101,7 +101,8 @@ package alternativa.engine3d.utils {
 		 */
 		alternativa3d static function updateBoundBoxHierarchically(object:Object3D, boundBox:BoundBox, transform:Transform3D = null):void {
 			object.updateBoundBox(boundBox, transform);
-			for (var child:Object3D = object.childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in object.childrenList)
+            {
 				if (child.transformChanged) child.composeTransforms();
 				child.localToCameraTransform.copy(child.transform);
 				if (transform != null) child.localToCameraTransform.append(transform);

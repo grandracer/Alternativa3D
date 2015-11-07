@@ -41,8 +41,14 @@ package alternativa.engine3d.core {
 		public var _scaleY:Number = 1;
 		public var _scaleZ:Number = 1;
 		public var parent:Object3D; // read-only
-		public var childrenList:Object3D;
+
+        [Deprecated(replacement="childrenList")]
+		public var legacyChildrenList:Object3D;
+        public var childrenList:Vector.<Object3D> = new Vector.<Object3D>();
+
+        [Deprecated]
 		public var next:Object3D;
+
 		public var transform:Transform3D = new Transform3D();
 		public var inverseTransform:Transform3D = new Transform3D();
 		public var transformChanged:Boolean = true;
@@ -182,11 +188,8 @@ package alternativa.engine3d.core {
 			}
 		}
 
-		/**
-		 * The <code>matrix</code> property represents a transformation matrix that determines the position
-		 * and orientation of an <code>Object3D</code>.
-		 */
-		public function get matrix():Matrix3D {
+		public function get matrix():Matrix3D
+        {
 			if (transformChanged) composeTransforms();
 			return new Matrix3D(Vector.<Number>([transform.a, transform.e, transform.i, 0, transform.b, transform.f, transform.j, 0, transform.c, transform.g, transform.k, 0, transform.d, transform.h, transform.l, 1]));
 		}
@@ -208,17 +211,8 @@ package alternativa.engine3d.core {
 			transformChanged = true;
 		}
 
-		/**
-		 * Searches for the intersection of an <code>Object3D</code> and given ray, defined by <code>origin</code> and <code>direction</code>.
-		 *
-		 * @param origin Origin of the ray.
-		 * @param direction Direction of the ray.
-		 * @return The result of searching given as <code>RayIntersectionData</code>. <code>null</code> will returned in case of intersection was not found.
-		 * @see RayIntersectionData
-		 * @see alternativa.engine3d.objects.Sprite3D
-		 * @see alternativa.engine3d.core.Camera3D#calculateRay()
-		 */
-		public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData {
+		public function intersectRay(origin:Vector3D, direction:Vector3D, rayIntersectionContext:RayIntersectionContext = null):RayIntersectionData
+        {
             if (rayIntersectionContext == null) rayIntersectionContext = new RayIntersectionContext();
             if (rayIntersectionContext.invisibleObjectsAreTransparentForRays && !visible) return null;
             if (rayIntersectionContext.childrenCallStack != null) {
@@ -243,7 +237,7 @@ package alternativa.engine3d.core {
             if (rayIntersectionContext.childrenCallStack != null && rayIntersectionContext.childrenCallStack[0].parent != this) {
                 rayIntersectionContext.reset();
             }
-            var list:Object3D = rayIntersectionContext.childrenCallStack == null ? childrenList : rayIntersectionContext.childrenCallStack[0];
+            var list:Object3D = rayIntersectionContext.childrenCallStack == null ? legacyChildrenList : rayIntersectionContext.childrenCallStack[0];
 			for (var child:Object3D = list; !stopped && child != null; child = child.next) {
                 if (rayIntersectionContext.childrenCallStack == null || child == rayIntersectionContext.childrenCallStack[0]) {
                     if (child.transformChanged) child.composeTransforms();
@@ -269,10 +263,6 @@ package alternativa.engine3d.core {
 			return minData;
 		}
 
-		/**
-		 * A <code>Matrix3D</code> object representing the combined transformation matrices of the <code>Object3D</code>
-		 * and all of its parent objects, back to the root level.
-		 */
 		public function get concatenatedMatrix():Matrix3D {
 			if (transformChanged) composeTransforms();
 			trm.copy(transform);
@@ -402,198 +392,72 @@ package alternativa.engine3d.core {
 			updateBoundBox(boundBox, null);
 		}
 
-		alternativa3d function updateBoundBox(boundBox:BoundBox, transform:Transform3D = null):void {
+		alternativa3d function updateBoundBox(boundBox:BoundBox, transform:Transform3D = null):void
+        {
 		}
 
+		public function addChild(child:Object3D):void
+        {
+            if (child.parent == this) return;
+            if (child.parent != null) child.parent.removeChild(child);
+            child.parent = this;
+            child.next = legacyChildrenList;
+            legacyChildrenList = child;
+            childrenList.push(child);
+		}
 
-		/**
-		 *  Adds given <code>Object3D</code> instance as a child to the end of this <code>Object3D</code>'s children list.
-		 *  If the given object was added to another <code>Object3D</code> already, it removes from it's old place.
-		 * @param child The <code>Object3D</code> instance to add.
-		 * @return The <code>Object3D</code> instance that you pass in the <code>child</code> parameter.
-		 */
-		public function addChild(child:Object3D):Object3D {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child == this) throw new ArgumentError("An object cannot be added as a child of itself.");
-			for (var container:Object3D = parent; container != null; container = container.parent) {
-				if (container == child) throw new ArgumentError("An object cannot be added as a child to one of it's children (or children's children, etc.).");
-			}
-			// Adding
-			if (child.parent != this) {
-				// Removing from old place
-				if (child.parent != null) child.parent.removeChild(child);
-				// Adding
-				addToList(child);
-				child.parent = this;
-			} else {
-				child = removeFromList(child);
-				if (child == null) throw new ArgumentError("Cannot add child.");
-				// Adding
-				addToList(child);
-			}
+		public function removeChild(child:Object3D):Object3D
+        {
+            var prev:Object3D;
+            for (var current:Object3D = legacyChildrenList; current != null; current = current.next)
+            {
+                if (current == child)
+                {
+                    child.parent = null;
+                    if (prev != null) prev.next = current.next;
+                    else legacyChildrenList = current.next;
+                    current.next = null;
+                    break;
+                }
+                prev = current;
+            }
+            var index:int = childrenList.indexOf(child);
+            if (index != -1)
+            {
+                childrenList[childrenList.indexOf(child)] = childrenList[childrenList.length - 1]; // TODO: запомнить индекс
+                childrenList.pop();
+            }
 			return child;
 		}
 
-		/**
-		 * Removes the specified child <code>Object3D</code> instance from the child list of the
-		 * this <code>Object3D</code> instance. The <code>parent</code> property of the removed child is set to <code>null</code>.
-		 *
-		 * @param child The <code>Object3D</code> instance to remove.
-		 * @return The <code>Object3D</code> instance that you pass in the <code>child</code> parameter.
-		 */
-		public function removeChild(child:Object3D):Object3D {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			if (child.parent != this) throw new ArgumentError("The supplied Object3D must be a child of the caller.");
-			child = removeFromList(child);
-			if (child == null) throw new ArgumentError("Cannot remove child.");
-			// Dispatching the event
-			child.parent = null;
-			return child;
+		public function removeChildren():void
+        {
+            for each (var child:Object3D in childrenList)
+            {
+                child.parent = null;
+                child.next = null;
+            }
+            childrenList.length = 0;
+            legacyChildrenList = null;
 		}
 
-		/**
-		 * Removes child objects in given range of indexes.
-		 * @param beginIndex Index, starts from which objects should be removed.
-		 * @param endIndex Index, till which objects should be removed.
-		 */
-		public function removeChildren(beginIndex:int = 0, endIndex:int = 2147483647):void {
-			// Error checking
-			if (beginIndex < 0) throw new RangeError("The supplied index is out of bounds.");
-			if (endIndex < beginIndex) throw new RangeError("The supplied index is out of bounds.");
-			var i:int = 0;
-			var prev:Object3D = null;
-			var begin:Object3D = childrenList;
-			while (i < beginIndex) {
-				if (begin == null) {
-					if (endIndex < 2147483647) {
-						throw new RangeError("The supplied index is out of bounds.");
-					} else {
-						return;
-					}
-				}
-				prev = begin;
-				begin = begin.next;
-				i++;
-			}
-			if (begin == null) {
-				if (endIndex < 2147483647) {
-					throw new RangeError("The supplied index is out of bounds.");
-				} else {
-					return;
-				}
-			}
-			var end:Object3D = null;
-			if (endIndex < 2147483647) {
-				end = begin;
-				while (i <= endIndex) {
-					if (end == null) throw new RangeError("The supplied index is out of bounds.");
-					end = end.next;
-					i++;
-				}
-			}
-			if (prev != null) {
-				prev.next = end;
-			} else {
-				childrenList = end;
-			}
-			// Removing
-			while (begin != end) {
-				var next:Object3D = begin.next;
-				begin.next = null;
-				begin.parent = null;
-				begin = next;
-			}
-		}
-
-		/**
-		 * Returns the child <code>Object3D</code> instance that exists at the specified index.
-		 * @param index Position of wished child.
-		 * @return Child object at given position.
-		 */
-		public function getChildAt(index:int):Object3D {
-			// Error checking
-			if (index < 0) throw new RangeError("The supplied index is out of bounds.");
-			// Search for element by index
-			var current:Object3D = childrenList;
-			for (var i:int = 0; i < index; i++) {
-				if (current == null) throw new RangeError("The supplied index is out of bounds.");
-				current = current.next;
-			}
-			if (current == null) throw new RangeError("The supplied index is out of bounds.");
-			return current;
-		}
-
-		public function getChildByName(name:String):Object3D {
-			// Error checking
-			if (name == null) throw new TypeError("Parameter name must be non-null.");
-			// Search for object
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
-				if (child.name == name) return child;
-			}
+		public function getChildByName(name:String):Object3D
+        {
+			for each (var child:Object3D in childrenList)
+                if (child.name == name)
+                    return child;
 			return null;
 		}
 
-		public function contains(child:Object3D):Boolean {
-			// Error checking
-			if (child == null) throw new TypeError("Parameter child must be non-null.");
-			// Search for object
-			if (child == this) return true;
-			for (var object:Object3D = childrenList; object != null; object = object.next) {
-				if (object.contains(child)) return true;
-			}
+		public function contains(object:Object3D):Boolean
+        {
+			if (object == this) return true;
+            for each (var child:Object3D in childrenList)
+				if (child.contains(object))
+                    return true;
 			return false;
 		}
 
-		/**
-		 * Returns the number of children of this object.
-		 */
-		public function get numChildren():int {
-			var num:int = 0;
-			for (var current:Object3D = childrenList; current != null; current = current.next) num++;
-			return num;
-		}
-
-		private function addToList(child:Object3D, item:Object3D = null):void {
-			child.next = item;
-			if (item == childrenList) {
-				childrenList = child;
-			} else {
-				for (var current:Object3D = childrenList; current != null; current = current.next) {
-					if (current.next == item) {
-						current.next = child;
-						break;
-					}
-				}
-			}
-		}
-
-		alternativa3d function removeFromList(child:Object3D):Object3D {
-			var prev:Object3D;
-			for (var current:Object3D = childrenList; current != null; current = current.next) {
-				if (current == child) {
-					if (prev != null) {
-						prev.next = current.next;
-					} else {
-						childrenList = current.next;
-					}
-					current.next = null;
-					return child;
-				}
-				prev = current;
-			}
-			return null;
-		}
-
-		/**
-		 * Gather the resources of this <code>Object3D</code>. This resources should be uploaded in the <code>Context3D</code> in order to <code>Object3D</code> can be rendered.
-		 *
-		 * @param hierarchy If <code>true</code>, the resources of all children will be gathered too.
-		 * @param resourceType If defined, only resources of this type will be gathered.
-		 * @return Vector consists of gathered resources
-		 * @see flash.display.Stage3D
-		 */
 		public function getResources(hierarchy:Boolean = false, resourceType:Class = null):Vector.<Resource> {
 			var res:Vector.<Resource> = new Vector.<Resource>();
 			var dict:Dictionary = new Dictionary();
@@ -606,11 +470,9 @@ package alternativa.engine3d.core {
 		}
 
 		alternativa3d function fillResources(resources:Dictionary, hierarchy:Boolean = false, resourceType:Class = null):void {
-			if (hierarchy) {
-				for (var child:Object3D = childrenList; child != null; child = child.next) {
+			if (hierarchy)
+                for each (var child:Object3D in childrenList)
 					child.fillResources(resources, hierarchy, resourceType);
-				}
-			}
 		}
 
 		alternativa3d function composeTransforms():void {
@@ -661,12 +523,13 @@ package alternativa.engine3d.core {
 			transformChanged = false;
 		}
 
-		alternativa3d function calculateVisibility(camera:Camera3D):void {
+		alternativa3d function calculateVisibility(camera:Camera3D):void
+        {
 		}
 
 		alternativa3d function calculateChildrenVisibility(camera:Camera3D):void
         {
-			for (var child:Object3D = childrenList; child != null; child = child.next)
+			for each (var child:Object3D in childrenList)
             {
 				if (child.visible)
                 {
@@ -684,7 +547,7 @@ package alternativa.engine3d.core {
 						child.culling = 63;
 					}
 					if (child.culling >= 0) child.calculateVisibility(camera);
-					if (child.childrenList != null) child.calculateChildrenVisibility(camera);
+					if (child.childrenList.length > 0) child.calculateChildrenVisibility(camera);
 				}
 			}
 		}
@@ -699,7 +562,7 @@ package alternativa.engine3d.core {
             var i:int;
             var light:Light3D;
 
-            for (var child:Object3D = childrenList; child != null; child = child.next)
+            for each (var child:Object3D in childrenList)
             {
                 if (child.visible)
                 {
@@ -748,7 +611,7 @@ package alternativa.engine3d.core {
                             child.collectDraws(camera, null, 0, useShadow && child.useShadow);
                         }
                     }
-                    if (child.childrenList != null) child.collectChildrenDraws(camera, lights, lightsLength, useShadow && child.useShadow);
+                    if (child.childrenList.length > 0) child.collectChildrenDraws(camera, lights, lightsLength, useShadow && child.useShadow);
                 }
             }
         }
@@ -793,59 +656,20 @@ package alternativa.engine3d.core {
 		alternativa3d function setTransformConstants(drawUnit:DrawUnit, surface:Surface, vertexShader:Linker, camera:Camera3D):void {
 		}
 
-
-		/**
-		 * Disables lighting of the object by given <code>light</code>.
-         *
-         * @param light Light which should not affect to the object
-         * @param updateChildren If <code>true</code> all children of this object will be also shielded from the given light.
-         * @see  #excludedLights()
-         * @see  #clearExcludedLights()
-		 */
-		public function excludeLight(light:Light3D, updateChildren:Boolean = false):void{
-			if (_excludedLights.indexOf(light) < 0) {
-				_excludedLights.push(light);
-			}
-			if (updateChildren) {
-				for (var child:Object3D = childrenList; child != null; child = child.next) {
+		public function excludeLight(light:Light3D, updateChildren:Boolean = false):void
+        {
+			if (_excludedLights.indexOf(light) < 0) _excludedLights.push(light);
+			if (updateChildren)
+                for each (var child:Object3D in childrenList)
 					child.excludeLight(light, true);
-				}
-			}
 		}
 
-		/**
-		 * Returns excluded lights list of current object.
-		 */
-		public function get excludedLights():Vector.<Light3D> {
-			return _excludedLights.concat();
-		}
-
-		/**
-		 * Resets list of lights excluded from lighting this object.
-		 */
-		public function clearExcludedLights(updateChildren:Boolean = false):void {
-			_excludedLights.length = 0;
-			if (updateChildren) {
-				for (var child:Object3D = childrenList; child != null; child = child.next) {
-					child.clearExcludedLights(true);
-				}
-			}
-		}
-
-		/**
-		 * Returns a copy of object.
-		 * @return A copy of this <code>Object3D</code>.
-		 */
 		public function clone():Object3D {
 			var res:Object3D = new Object3D();
 			res.clonePropertiesFrom(this);
 			return res;
 		}
 
-		/**
-		 * Copies basic properties of <code>Object3D</code>. This method calls from  <code>clone()</code> method.
-		 * @param source <code>Object3D</code>, properties of  which will be copied.
-		 */
 		protected function clonePropertiesFrom(source:Object3D):void {
 			userData = source.userData;
 
@@ -861,22 +685,23 @@ package alternativa.engine3d.core {
 			_scaleX = source._scaleX;
 			_scaleY = source._scaleY;
 			_scaleZ = source._scaleZ;
-			for (var child:Object3D = source.childrenList, lastChild:Object3D; child != null; child = child.next) {
-				var newChild:Object3D = child.clone();
-				if (childrenList != null) {
-					lastChild.next = newChild;
-				} else {
-					childrenList = newChild;
-				}
-				lastChild = newChild;
-				newChild.parent = this;
-			}
+
+            childrenList.length = source.childrenList.length;
+            var next:Object3D = null;
+            if (childrenList.length > 0)
+            {
+                for (var i:int = childrenList.length - 1; i >= 0; i--)
+                {
+                    var newChild:Object3D = source.childrenList[i].clone();
+                    newChild.next = next;
+                    newChild.parent = this;
+                    childrenList[i] = newChild;
+                    next = newChild;
+                }
+            }
+            legacyChildrenList = next;
 		}
 
-		/**
-		 * Returns the string representation of the specified object.
-		 * @return The string representation of the specified object.
-		 */
 		public function toString():String {
 			var className:String = getQualifiedClassName(this);
 			var start:int = className.indexOf("::");

@@ -92,7 +92,8 @@ package alternativa.engine3d.objects {
 		}
 
 		public function calculateBindingMatrices():void {
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in childrenList)
+            {
 				var joint:Joint = child as Joint;
 				if (joint != null) {
 					if (joint.transformChanged) {
@@ -402,7 +403,8 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		alternativa3d function calculateJointsTransforms(root:Object3D):void {
-			for (var child:Object3D = root.childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in root.childrenList)
+            {
 				if (child.transformChanged) child.composeTransforms();
 				// Write transformToSkin matrix to localToGlobalTransform property
 				child.localToGlobalTransform.combine(root.localToGlobalTransform, child.transform);
@@ -417,7 +419,8 @@ package alternativa.engine3d.objects {
 		 * @private
 		 */
 		override alternativa3d function updateBoundBox(boundBox:BoundBox, transform:Transform3D = null):void {
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in childrenList)
+            {
 				if (child.transformChanged) child.composeTransforms();
 				// Write transformToSkin matrix to localToGlobalTransform property
 				child.localToGlobalTransform.copy(child.transform);
@@ -566,7 +569,8 @@ package alternativa.engine3d.objects {
 		override alternativa3d function collectDraws(camera:Camera3D, lights:Vector.<Light3D>, lightsLength:int, useShadow:Boolean):void {
 			if (geometry == null) return;
 			// Calculate joints matrices
-			for (var child:Object3D = childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in childrenList)
+            {
 				if (child.transformChanged) child.composeTransforms();
 				// Write transformToSkin matrix to localToGlobalTransform property
 				child.localToGlobalTransform.copy(child.transform);
@@ -711,11 +715,11 @@ package alternativa.engine3d.objects {
 		}
 
 		private function findClonedJoint(joint:Joint, parentSource:Object3D, parentDest:Object3D):Object3D {
-			for (var srcChild:Object3D = parentSource.childrenList, dstChild:Object3D = parentDest.childrenList; srcChild != null; srcChild = srcChild.next, dstChild = dstChild.next) {
+			for (var srcChild:Object3D = parentSource.legacyChildrenList, dstChild:Object3D = parentDest.legacyChildrenList; srcChild != null; srcChild = srcChild.next, dstChild = dstChild.next) {
 				if (srcChild == joint) {
 					return dstChild;
 				}
-				if (srcChild.childrenList != null) {
+				if (srcChild.childrenList.length > 0) {
 					var j:Object3D = findClonedJoint(joint, srcChild, dstChild);
 					if (j != null) return j;
 				}

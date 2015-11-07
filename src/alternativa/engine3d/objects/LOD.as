@@ -59,7 +59,8 @@ package alternativa.engine3d.objects {
 				level.parent = this;
 				// Dispatch of event.
 			} else {
-				if (removeFromList(level) == null) removeFromLevelList(level);
+                throw new TypeError("Переписать, если кому-то это вдруг понадобится");
+//				if (removeFromList(level) == null) removeFromLevelList(level);
 				//  Add.
 				addToLevelList(level, distance);
 			}
@@ -205,9 +206,8 @@ package alternativa.engine3d.objects {
 			if (child.culling >= 0) child.calculateVisibility(camera);
 
 			// Hierarchical call
-			for (var c:Object3D = child.childrenList; c != null; c = c.next) {
+            for each (var c:Object3D in child.childrenList)
 				calculateChildVisibility(c, child, camera);
-			}
 		}
 
 		/**
@@ -244,9 +244,8 @@ package alternativa.engine3d.objects {
 				child.collectDraws(camera, null, 0, useShadow);
 			}
 			// Hierarchical call
-			for (var c:Object3D = child.childrenList; c != null; c = c.next) {
+            for each (var c:Object3D in child.childrenList)
 				collectChildDraws(c, child, camera, lights, lightsLength, useShadow);
-			}
 		}
 
 		/**
@@ -308,7 +307,8 @@ package alternativa.engine3d.objects {
 		}
 
 		private function updateBoundBoxChildren(parent:Object3D, boundBox:BoundBox):void {
-			for (var current:Object3D = parent.childrenList; current != null; current = current.next) {
+            for each (var current:Object3D in parent.childrenList)
+            {
 				if (current.transformChanged) current.composeTransforms();
 				current.localToCameraTransform.combine(parent.localToCameraTransform, current.transform);
 				current.updateBoundBox(boundBox, current.localToCameraTransform);

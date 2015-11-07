@@ -279,9 +279,8 @@ package alternativa.engine3d.loaders {
 			}
 			parents[source] = id;
 
-			for (var child:Object3D = source.childrenList; child != null; child = child.next) {
+            for each (var child:Object3D in source.childrenList)
 				exportHierarchy(child, dest);
-			}
 		}
 
 		private function exportJoint(id:Long, source:Joint, dest:A3D2):void {
